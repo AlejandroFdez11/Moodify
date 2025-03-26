@@ -3,6 +3,11 @@ const cors = require("cors")
 const dotenv = require("dotenv")
 const mongoose = require("mongoose")
 
+//Importar los Routers de cada elemento
+const userRoutes = require("./routes/userRoutes")
+const songRoutes = require("./routes/songRoutes")
+const playlistRoutes = require("./routes/playlistRoutes")
+
 dotenv.config()
 const app = express()
 
@@ -14,8 +19,10 @@ mongoose.connect(process.env.MONGO_URL)
 .then(()=>console.log("MongoDB conectado"))
 .catch(e => console.log(e))
 
-//import userRoutes from "./routes/userRoutes.js";
-//app.use("/api/users", userRoutes);
+//Rutas de la API
+app.use("/users",userRoutes)
+app.use("/songs",songRoutes)
+app.use("/playlists",playlistRoutes)
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));

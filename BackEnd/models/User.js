@@ -4,12 +4,12 @@ const validator = require("validator")
 const userSchema = new mongoose.Schema({
     name : {
         type: String,
-        require: [true, "El nombre es obligatorio"]
+        required: [true, "El nombre es obligatorio"]
     },
     email:{
         type: String,
         unique: true,
-        require: [true, "El email es obligatorio"],
+        required: [true, "El email es obligatorio"],
         validate: {
             validator: validator.isEmail,
             message: "Por fabor, ingresa un email valido"
@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
     },
     password:{
         type: String,
-        require: [true,"La contraseña es obligatoria"],
+        required: [true,"La contraseña es obligatoria"],
         minlength: [8,"La contraseña debe tener al menos 8 caracteres"]
     },
     playlists:[{
