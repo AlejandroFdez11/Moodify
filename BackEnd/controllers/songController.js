@@ -32,7 +32,17 @@ exports.searchSpotifySongs = async (req, res) => {
       headers: { Authorization: `Bearer ${token}` },
       params: { q: query, type: "track", limit: 10 },
     })
-    res.json(response.data.tracks.items)
+    //Filtro la información que quiero de cada cancion (sino lo hago me devuelve albunes enteros)
+    const songs = response.data.tracks.items.map(track => ({
+      name: track.name,
+      artist: track.artists.map(artist => artist.name).join(", "),
+      album: track.album.name,
+      release_date: track.album.release_date,
+      preview_url: track.preview_url,  // URL para previsualizar la canción
+      spotify_url: track.external_urls.spotify,
+      album_image: track.album.images[0].url, // Imagen del álbum
+    }))
+    res.json(songs)
   } catch (error) {
     res.status(400).json({ error: error.message })
   }
