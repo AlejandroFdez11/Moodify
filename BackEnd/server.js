@@ -7,6 +7,7 @@ const mongoose = require("mongoose")
 const userRoutes = require("./routes/userRoutes")
 const songRoutes = require("./routes/songRoutes")
 const playlistRoutes = require("./routes/playlistRoutes")
+const { authenticateSpotify } = require("./config/spotifyConfig")
 
 dotenv.config()
 const app = express()
@@ -23,6 +24,9 @@ mongoose.connect(process.env.MONGO_URL)
 app.use("/users",userRoutes)
 app.use("/songs",songRoutes)
 app.use("/playlists",playlistRoutes)
+
+//Autentificación con Spotify
+authenticateSpotify()
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
