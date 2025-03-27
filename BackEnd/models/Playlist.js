@@ -15,11 +15,7 @@ const playlistSchema = new mongoose.Schema({
   isPublic:{
     type: Boolean,
     default: false
-  },
-  fechaCreacion:{
-    type: Date,
-    default: Date.now
   }
 });
 
-export default mongoose.model("Playlist", playlistSchema);
+module.exports = mongoose.model("Playlist", playlistSchema);
