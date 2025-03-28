@@ -1,10 +1,10 @@
 const Playlist = require("../models/Playlist")
 
 exports.createPlaylist = async (req, res) => {
-  const { name, creator, songs } = req.body
+  const { name, creador, songs,isPublic } = req.body
 
   try {
-    const newPlaylist = new Playlist({ name, creator, songs })
+    const newPlaylist = new Playlist({ name, creador, songs, isPublic})
     await newPlaylist.save()
     res.status(201).json(newPlaylist)
   } catch (error) {
@@ -14,7 +14,7 @@ exports.createPlaylist = async (req, res) => {
 
 exports.getPlaylists = async (req, res) => {
   try {
-    const playlists = await Playlist.find().populate("creator").populate("songs")
+    const playlists = await Playlist.find().populate("creador").populate("songs")
     res.json(playlists)
   } catch (error) {
     res.status(400).json({ error: error.message })
