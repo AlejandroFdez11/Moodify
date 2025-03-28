@@ -5,6 +5,6 @@ const router = express.Router();
 
 router.post("/", addSong);
 router.get("/", getSongs);
-router.get("/search", searchSpotifySongs); // Búsca en Spotify
+router.get("/search", searchSpotifySongs); // Búsca en SpotifyAPI
 
 module.exports = router;

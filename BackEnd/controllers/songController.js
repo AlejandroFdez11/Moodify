@@ -3,10 +3,10 @@ const axios = require("axios")
 const { getSpotifyToken } = require("../config/spotifyConfig")
 
 exports.addSong = async (req, res) => {
-  const { title, artist, album, genre, url } = req.body
+  const { titulo, artista, album, genero, url } = req.body
 
   try {
-    const newSong = new Song({ title, artist, album, genre, url })
+    const newSong = new Song({ titulo, artista, album, genero, url })
     await newSong.save()
     res.status(201).json(newSong)
   } catch (error) {
@@ -32,6 +32,7 @@ exports.searchSpotifySongs = async (req, res) => {
       headers: { Authorization: `Bearer ${token}` },
       params: { q: query, type: "track", limit: 10 },
     })
+    
     //Filtro la información que quiero de cada cancion (sino lo hago me devuelve albunes enteros)
     const songs = response.data.tracks.items.map(track => ({
       name: track.name,
