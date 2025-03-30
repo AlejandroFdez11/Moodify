@@ -1,12 +1,22 @@
-import React from 'react'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/NavBar";
+import Playlists from './pages/Playlists';
+import Home from "./pages/Home";
+import Footer from "./components/Footer";
 
 const App = () => {
   return (
-    <div>
-      <div className='container bg-red-500 mx-auto'>
-        <h1>Hola esto es Tailwinds con React</h1>
+    <Router>
+      <div className="bg-gray-900 min-h-screen text-white">
+        <Navbar/>
+        <Routes>
+          <Route path="/" element={<Home/>}/>
+          <Route path="/playlists" element={<Playlists/>}/>
+        </Routes>
       </div>
-    </div>
+      <Footer/>
+    </Router>
   )
 }
 
