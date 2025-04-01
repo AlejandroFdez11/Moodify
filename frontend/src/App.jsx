@@ -1,9 +1,11 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/NavBar";
-import Playlists from './pages/Playlists';
-import Home from "./pages/Home";
-import Footer from "./components/Footer";
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import Navbar from "./components/NavBar"
+import Registro from "./pages/Registro"
+import Home from "./pages/Home"
+import Footer from "./components/Footer"
+import Login from "./pages/Login"
+import Perfil from "./pages/Perfil"
 
 const App = () => {
   return (
@@ -12,7 +14,9 @@ const App = () => {
         <Navbar/>
         <Routes>
           <Route path="/" element={<Home/>}/>
-          <Route path="/playlists" element={<Playlists/>}/>
+          <Route path="/registro" element={<Registro/>}/>
+          <Route path="/login" element={<Login/>}/>
+          <Route path="/perfil" element={<Perfil/>}/>
         </Routes>
       </div>
       <Footer/>

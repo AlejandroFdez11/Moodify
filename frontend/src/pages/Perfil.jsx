@@ -31,3 +31,5 @@ const Perfil =()=>{
         </div>
     )
 }
+
+export default Perfil
