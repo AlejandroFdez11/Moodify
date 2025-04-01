@@ -23,7 +23,7 @@ const Perfil =()=>{
             <div className="bg-gray-800 p-6 rounded-md text-center">
                 <h2 className="text-white text-xl mb-4">Bienvenido, {user.name}</h2>
                 <p className="text-gray-400">{user.email}</p>
-                <button onClick={handleLogout} className="mt-4 bg-red-600 text-white px-4 py-2 rounded">Cerrar sesión</button>
+                <button onClick={Logout} className="mt-4 bg-red-600 text-white px-4 py-2 rounded">Cerrar sesión</button>
             </div>
             ) : (
             <p className="text-white">Cargando...</p>

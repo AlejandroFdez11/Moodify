@@ -1,11 +1,11 @@
 import { useState } from "react"
 import { register } from "../services/Auth"
-import { userNavigate} from "react-router-dom"
+import { useNavigate} from "react-router-dom"
 
 const Registro = () =>{
     const [form,setForm] = useState({name: "", email: "", password: ""})
     const [error, setError] = useState("")
-    const pag = userNavigate()
+    const pag = useNavigate()
 
     const cogerDatos=(e)=>{
         setForm({...form, [e.target.name]: e.target.value})
@@ -14,6 +14,7 @@ const Registro = () =>{
     const comprobacion= async (e)=>{
         e.preventDefault()
         try {
+            console.log(form)
             await register(form)
             pag("/login")
         } catch (error) {

@@ -8,14 +8,15 @@ const Login=()=>{
     const pag = useNavigate();
 
     const recogerDatos=(e)=>{
-        setForm({...form, [e.target.name]: [e.target.value]})
+        setForm({...form, [e.target.name]: e.target.value})
     }
 
     const comprobacion= async (e)=>{
         e.preventDefault()
         try {
+          console.log(form)
             await login(form)
-            pag("/Perfil")
+            pag("/")
         } catch (error) {
             setError("Error en el Login, por fabor compruebe las credenciales.")
         }
