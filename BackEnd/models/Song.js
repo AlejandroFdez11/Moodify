@@ -20,7 +20,6 @@ const songSchema = new mongoose.Schema({
     imagen:{
         type: String,
         required: true,
-        default: "https://images.wondershare.com/repairit/aticle/2021/07/resolve-images-not-showing-problem-1.jpg"
     },
     url:{
         type:String,

@@ -3,10 +3,10 @@ const axios = require("axios")
 const { getSpotifyToken } = require("../config/spotifyConfig")
 
 exports.addSong = async (req, res) => {
-  const { titulo, artista, album, genero, url } = req.body
+  const { titulo, artista, album, genero,imagen, url } = req.body
 
   try {
-    const newSong = new Song({ titulo, artista, album, genero, url })
+    const newSong = new Song({ titulo, artista, album, genero,imagen, url })
     await newSong.save()
     res.status(201).json(newSong)
   } catch (error) {
@@ -24,27 +24,30 @@ exports.getSongs = async (req, res) => {
 }
 
 exports.searchSpotifySongs = async (req, res) => {
-  const { query } = req.query
+  const { query } = req.query;
 
   try {
-    const token = getSpotifyToken()
-    const response = await axios.get(`https://api.spotify.com/v1/search`, {
+    const token = getSpotifyToken();  // Aquí obtienes el token de Spotify
+    const response = await axios.get('https://api.spotify.com/v1/search', {
       headers: { Authorization: `Bearer ${token}` },
-      params: { q: query, type: "track", limit: 10 },
-    })
-    
-    //Filtro la información que quiero de cada cancion (sino lo hago me devuelve albunes enteros)
-    const songs = response.data.tracks.items.map(track => ({
-      name: track.name,
-      artist: track.artists.map(artist => artist.name).join(", "),
-      album: track.album.name,
-      release_date: track.album.release_date,
-      preview_url: track.preview_url,  // URL para previsualizar la canción
-      spotify_url: track.external_urls.spotify,
-      album_image: track.album.images[0].url, // Imagen del álbum
-    }))
-    res.json(songs)
+      params: { q: query, type: 'track', limit: 10 },
+    });
+
+    // Mapeamos los resultados para extraer solo la información necesaria
+  const songs = response.data.tracks.items.map((track) => ({
+    titulo: track.name, // Nombre de la canción
+    artista: track.artists.map((artist) => artist.name).join(', '), // Artista(s)
+    album: track.album.name,  // Nombre del álbum
+    genero: "Sin definir", // Spotify no proporciona el género de la canción en esta consulta
+    imagen: track.album.images[0]?.url || "https://images.wondershare.com/repairit/aticle/2021/07/resolve-images-not-showing-problem-1.jpg", // Imagen del álbum (con una imagen por defecto si no existe)
+    url: track.external_urls.spotify, // URL para escuchar en Spotify
+  }));
+
+
+    // Devolvemos las canciones al cliente
+    res.json(songs);
   } catch (error) {
-    res.status(400).json({ error: error.message })
+    console.error('Error al buscar canciones:', error);
+    res.status(400).json({ error: error.message });
   }
 }
