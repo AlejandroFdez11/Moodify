@@ -9,7 +9,9 @@ const Home = () => {
     axios.get("http://localhost:5000/songs")
       .then(res => setSongs(res.data))
       .catch(err => console.error(err));
-  }, []);
+  }, [])
+
+  console.log(songs)
 
   return (
     <div className="p-6">

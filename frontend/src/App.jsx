@@ -6,6 +6,7 @@ import Home from "./pages/Home"
 import Footer from "./components/Footer"
 import Login from "./pages/Login"
 import Perfil from "./pages/Perfil"
+import Busca from "./pages/Buscador"
 
 const App = () => {
   return (
@@ -17,6 +18,7 @@ const App = () => {
           <Route path="/registro" element={<Registro/>}/>
           <Route path="/login" element={<Login/>}/>
           <Route path="/perfil" element={<Perfil/>}/>
+          <Route path="/buscador" element={<Busca/>}/>
         </Routes>
       </div>
       <Footer/>
