@@ -14,9 +14,9 @@ const Login=()=>{
     const comprobacion= async (e)=>{
         e.preventDefault()
         try {
-          console.log(form)
             await login(form)
             pag("/")
+            window.location.reload();
         } catch (error) {
             setError("Error en el Login, por fabor compruebe las credenciales.")
         }

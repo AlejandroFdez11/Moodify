@@ -11,8 +11,6 @@ const Home = () => {
       .catch(err => console.error(err));
   }, [])
 
-  console.log(songs)
-
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-white mb-4">Canciones Populares</h1>

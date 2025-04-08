@@ -7,6 +7,7 @@ import Footer from "./components/Footer"
 import Login from "./pages/Login"
 import Perfil from "./pages/Perfil"
 import Busca from "./pages/Buscador"
+import PagError from "./pages/PagError"
 
 const App = () => {
   return (
@@ -19,6 +20,9 @@ const App = () => {
           <Route path="/login" element={<Login/>}/>
           <Route path="/perfil" element={<Perfil/>}/>
           <Route path="/buscador" element={<Busca/>}/>
+
+
+          <Route path="*" element={<PagError/>}/>
         </Routes>
       </div>
       <Footer/>

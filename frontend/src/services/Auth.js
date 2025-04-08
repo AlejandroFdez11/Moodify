@@ -10,17 +10,20 @@ export const register = async (datosUsuario) =>{
 
 export const login = async (datosUsuario) =>{
     const res = await axios.post(`${URL_API}users/login`,datosUsuario)
+    const usuario = datosUsuario
     const {token} = res.data
 
     console.log(datosUsuario)
 
     //Guardamos el token en el localStorage
     localStorage.setItem("token",token)
+    localStorage.setItem("user",JSON.stringify(datosUsuario))
     return res.data
 }
 
 export const logout =()=>{
     localStorage.removeItem("token")
+    localStorage.removeItem("user")
 }
 
 export const getUser=()=>{
