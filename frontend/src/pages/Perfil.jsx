@@ -3,6 +3,7 @@ import { ClipLoader } from "react-spinners";
 import { logout } from "../services/Auth";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import PlaylistCard from "../components/PlayListCard";
 
 const Perfil = () => {
   const [user, setUser] = useState(null);
@@ -75,15 +76,8 @@ const Perfil = () => {
         <h2 className="text-2xl font-semibold mb-4">Tus playlists</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {playlists.length > 0 ? (
-            playlists.map((playlist, i) => (
-              <div
-                key={i}
-                className="bg-gray-800 p-4 rounded-xl shadow-md hover:bg-gray-700 transition"
-              >
-                <div className="w-full h-32 bg-gray-700 rounded-md mb-2"></div>
-                <h3 className="font-semibold">{playlist.nombre || `Playlist ${i + 1}`}</h3>
-                <p className="text-sm text-gray-400">{playlist.descripcion || "Sin descripción"}</p>
-              </div>
+            playlists.map((playlist) => (
+              <PlaylistCard key={playlist._id} playlist={playlist} />
             ))
           ) : (
             <p className="text-gray-400">No tienes playlists todavía.</p>
