@@ -38,21 +38,35 @@ exports.loginUser = async (req, res) => {
     }
 }
 
-// Actualizar imagen de perfil (ruta PUT)
-exports.updateProfileImage = [
-  upload.single("imagenPerfil"),  // Utilizar el middleware de Multer para subir una sola imagen
-  async (req, res) => {
-    try {
-      const user = await User.findById(req.params.id);
-      if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
+// Actualizar imagen de perfil
+exports.updateProfileImage = async (req, res) => {
+  const { token } = req.body;
 
-      // Actualizar la URL de la imagen de perfil
-      user.imagenPerfil = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  if (!req.file) {
+      return res.status(400).json({ error: 'No se ha proporcionado una imagen' });
+  }
+
+  // Obtener el ID del usuario desde el token
+  try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.id;
+
+      // Buscar el usuario en la base de datos
+      const user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      // Guardar la URL de la imagen de perfil en la base de datos
+      const imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+      user.imagenPerfil = imageUrl;
+
+      // Guardar los cambios en la base de datos
       await user.save();
 
-      res.json({ message: "Imagen de perfil actualizada exitosamente", imagenPerfil: user.imagenPerfil });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
+      res.status(200).json({ message: 'Imagen de perfil actualizada', imagenPerfil: imageUrl });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Hubo un error al actualizar la imagen de perfil' });
   }
-]
+};

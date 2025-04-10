@@ -1,25 +1,27 @@
-const multer = require("multer");
-const path = require("path");
+const multer = require('multer');
+const path = require('path');
 
-// Configuración para almacenar las imágenes en la carpeta 'uploads/'
+// Configuración de Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, "uploads/");  // Asegúrate de crear la carpeta 'uploads' en tu raíz
+        cb(null, 'uploads/');  // Asegúrate de que esta carpeta exista
     },
     filename: (req, file, cb) => {
-      cb(null, Date.now() + path.extname(file.originalname));  // Nombre único para evitar colisiones
-    },
-  });
-  
-  const upload = multer({
+        const ext = path.extname(file.originalname);
+        const filename = Date.now() + ext; // Genera un nombre único para cada imagen
+        cb(null, filename);
+    }
+});
+
+const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
-      const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
-      if (!allowedTypes.includes(file.mimetype)) {
-        return cb(new Error("Solo se permiten imágenes JPEG, PNG o JPG"));
-      }
-      cb(null, true);
-    },
-  });
-  
-  module.exports = upload;
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (ext !== '.jpg' && ext !== '.jpeg' && ext !== '.png') {
+            return cb(new Error('Solo se permiten archivos de imagen (jpg, jpeg, png)'));
+        }
+        cb(null, true);
+    }
+}).single('imagen'); // 'imagen' es el nombre del campo del formulario o body
+
+module.exports = upload;

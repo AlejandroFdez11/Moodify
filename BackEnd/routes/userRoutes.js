@@ -4,6 +4,6 @@ const router = express.Router()
 
 router.post("/register",registerUser)
 router.post("/login",loginUser)
-router.put("/update-profile-image/:id", updateProfileImage);
+router.post('/update-profile-image', upload, updateProfileImage);
 
 module.exports= router
