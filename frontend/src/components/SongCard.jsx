@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 const SongCard = ({ song }) => {
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition w-70 h-80 flex flex-col">
+    <div className="bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition w-full h-80 flex flex-col">
       <img
         src={song.imagen}
         alt={song.titulo}
