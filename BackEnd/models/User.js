@@ -20,6 +20,9 @@ const userSchema = new mongoose.Schema({
         required: [true,"La contraseña es obligatoria"],
         minlength: [8,"La contraseña debe tener al menos 8 caracteres"]
     },
+    imagenPerfil:{
+        type: String
+    },
     playlists:[{
         type: mongoose.Schema.Types.ObjectId, ref: "Playlist"
     }]
