@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { isAuthenticated, logout } from "../services/Auth";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -70,6 +69,7 @@ const Navbar = () => {
 
           {authenticated ? (
             <>
+            <Link to="/biblioteca" className="text-gray-300 hover:text-white">📚 Biblioteca</Link>
               {/* Círculo con imagen de perfil */}
               <button 
                 onClick={() => navigate("/perfil")} 
