@@ -1,10 +1,10 @@
 const Playlist = require("../models/Playlist")
 
 exports.createPlaylist = async (req, res) => {
-  const { name, creador, songs,isPublic } = req.body
+  const { name, creador, songs,imagen,isPublic } = req.body
 
   try {
-    const newPlaylist = new Playlist({ name, creador, songs, isPublic})
+    const newPlaylist = new Playlist({ name, creador, songs,imagen, isPublic})
     await newPlaylist.save()
     res.status(201).json(newPlaylist)
   } catch (error) {
