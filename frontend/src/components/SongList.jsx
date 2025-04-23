@@ -30,7 +30,7 @@ const SongList = ({ songs }) => {
             <li key={index} className="flex items-center justify-between text-gray-300 p-2 bg-gray-800 rounded hover:bg-gray-700">
               <div className="flex items-center">
                 <img src={song.imagen} alt={song.titulo} className="w-12 h-12 mr-3 rounded" />
-                🎵 {song.titulo} - {song.artista}
+                {song.titulo} - {song.artista}
               </div>
 
               {/* Botón de añadir a canciones populares */}

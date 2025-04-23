@@ -4,7 +4,7 @@ const PlaylistCard = ({ playlist }) => {
   return (
     <div className="bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition w-full h-80 flex flex-col">
       <img
-        src={playlist.imagen || "https://via.placeholder.com/300x200?text=Playlist"}
+        src={playlist.imagen}
         alt={playlist.name}
         className="w-full h-56 object-cover rounded-md"
       />
