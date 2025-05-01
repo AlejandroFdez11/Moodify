@@ -12,6 +12,7 @@ const SongCard = ({ song }) => {
       <p className="text-gray-400 text-xs truncate">{song.artista}</p>
       <Link
         to={`/song/${song._id}`}
+        state={{ uri: song.uri, titulo: song.titulo, artista: song.artista }}
         className="text-blue-500 hover:underline text-sm mt-auto"
       >
         Ver más
