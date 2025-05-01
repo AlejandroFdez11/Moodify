@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+// SongCard.jsx
+import { Link } from 'react-router-dom';
 
 const SongCard = ({ song }) => {
   return (

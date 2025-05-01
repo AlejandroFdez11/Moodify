@@ -1,45 +1,39 @@
-import { useLocation } from "react-router-dom";
-import { useEffect, useRef } from "react";
+// Reproductor.jsx
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 const Reproductor = () => {
   const location = useLocation();
-  const { uri } = location.state || {};
-  const iframeRef = useRef(null);
+  const navigate = useNavigate();
+  const { uri, titulo, artista } = location.state || {};
+  const [iframeLoaded, setIframeLoaded] = useState(false);
 
   useEffect(() => {
-    if (!uri) return;
+    if (!uri) {
+      // Si no hay URI, redirige al inicio
+      navigate('/');
+    }
+  }, [uri, navigate]);
 
-    const script = document.createElement("script");
-    script.src = "https://open.spotify.com/embed/iframe-api/v1";
-    script.async = true;
-    document.body.appendChild(script);
-
-    window.onSpotifyIframeApiReady = (IFrameAPI) => {
-      const element = iframeRef.current;
-      const options = {
-        uri: uri,
-        width: "100%",
-        height: 80,
-        theme: "dark",
-      };
-      IFrameAPI.createController(element, options, (embedController) => {
-        // Puedes guardar embedController si necesitas controlar la reproducción
-      });
-    };
-
-    return () => {
-      // Limpia el script y la función global cuando el componente se desmonta
-      delete window.onSpotifyIframeApiReady;
-    };
-  }, [uri]);
-
-  if (!uri) {
-    return <p>No se proporcionó información de la canción.</p>;
-  }
+  const trackId = uri?.split(':').pop();
+  const embedUrl = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator`;
 
   return (
-    <div className="p-4">
-      <div ref={iframeRef}></div>
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
+      <h1 className="text-2xl font-bold mb-4">{titulo}</h1>
+      <p className="mb-6 text-gray-400">{artista}</p>
+      {!iframeLoaded && <p>Cargando reproductor...</p>}
+      <iframe
+        src={embedUrl}
+        width="100%"
+        height="152"
+        frameBorder="0"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        loading="eager"
+        allowFullScreen
+        onLoad={() => setIframeLoaded(true)}
+        className="rounded-lg"
+      ></iframe>
     </div>
   );
 };
