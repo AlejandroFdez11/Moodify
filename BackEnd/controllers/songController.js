@@ -27,12 +27,15 @@ exports.addSong = async (req, res) => {
       titulo: track.name,
       artista: track.artists.map((a) => a.name).join(', '),
       album: track.album.name,
-      genero: 'Sin definir', // opcional: podrías usar audio features después
+      genero: 'Sin definir',
       imagen: track.album.images[0]?.url || '',
       url: track.external_urls.spotify,
       trackId,
       uri: track.uri,
-      preview_url: track.preview_url, // ⚠️ esto es lo que necesitas para reproducir
+      preview_url: track.preview_url,
+      duration_ms: track.duration_ms, 
+      release_date: track.album.release_date,
+      popularity: track.popularity,
     });
 
     await newSong.save();
@@ -73,9 +76,11 @@ exports.searchSpotifySongs = async (req, res) => {
       url: track.external_urls.spotify,
       spotifyId: track.id,
       uri: track.uri,
-      preview_url: track.preview_url || null
+      preview_url: track.preview_url || null,
+      duration_ms: track.duration_ms, 
+      release_date: track.album.release_date, 
+      popularity: track.popularity, 
     }));
-
 
     // Devolvemos las canciones
     res.json(songs);
@@ -83,11 +88,11 @@ exports.searchSpotifySongs = async (req, res) => {
     console.error('Error al buscar canciones:', error);
     res.status(400).json({ error: error.message });
   }
-}
+};
 
 exports.getSongById = async (req, res) => {
   try {
-    const song = await Song.findById(req.params.id);                           // :contentReference[oaicite:0]{index=0}
+    const song = await Song.findById(req.params.id);
     if (!song) return res.status(404).json({ error: "Canción no encontrada" });
     res.json(song);
   } catch (error) {

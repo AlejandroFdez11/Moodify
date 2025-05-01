@@ -35,7 +35,19 @@ const songSchema = new mongoose.Schema({
   },
   preview_url: {
     type: String
-  }  
+  },
+  duration_ms: {
+    type: Number,  
+    required: true
+  },
+  release_date: {
+    type: String,  
+    required: true
+  },
+  popularity: {
+    type: Number,  
+    required: true
+  }
 });
 
 module.exports = mongoose.model("Song", songSchema);
