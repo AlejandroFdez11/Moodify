@@ -24,6 +24,15 @@ const songSchema = new mongoose.Schema({
     url:{
         type:String,
         required:true //Url de la cancion de spotify
+    },
+    spotifyId: {       // <-- Añade esto
+      type: String,
+      required: true,
+      unique: true
+    },
+    uri: {              // <-- Añade esto
+      type: String,
+      required: true
     }
 })
 

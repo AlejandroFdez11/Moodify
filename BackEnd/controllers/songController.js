@@ -34,14 +34,16 @@ exports.searchSpotifySongs = async (req, res) => {
     });
 
     // Mapeamos los resultados para extraer solo la información necesaria
-  const songs = response.data.tracks.items.map((track) => ({
-    titulo: track.name, // Nombre de la canción
-    artista: track.artists.map((artist) => artist.name).join(', '), // Artista(s)
-    album: track.album.name,  // Nombre del álbum
-    genero: "Sin definir", // Spotify no proporciona el género de la canción en esta consulta
-    imagen: track.album.images[0]?.url || "https://images.wondershare.com/repairit/aticle/2021/07/resolve-images-not-showing-problem-1.jpg", // Imagen del álbum (con una imagen por defecto si no existe)
-    url: track.external_urls.spotify, // URL para escuchar en Spotify
-  }));
+    const songs = response.data.tracks.items.map((track) => ({
+      titulo: track.name,
+      artista: track.artists.map((a) => a.name).join(", "),
+      album: track.album.name,
+      genero: "Sin definir",
+      imagen: track.album.images[0]?.url || "https://images.wondershare.com/default.jpg",
+      url: track.external_urls.spotify,
+      spotifyId: track.id,
+      uri: track.uri
+    }));
 
 
     // Devolvemos las canciones al cliente
