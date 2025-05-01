@@ -3,16 +3,46 @@ const axios = require("axios")
 const { getSpotifyToken } = require("../config/spotifyConfig")
 
 exports.addSong = async (req, res) => {
-  const { titulo, artista, album, genero,imagen, url } = req.body
+  const { url } = req.body;
 
   try {
-    const newSong = new Song({ titulo, artista, album, genero,imagen, url })
-    await newSong.save()
-    res.status(201).json(newSong)
+    const match = url.match(/track\/([a-zA-Z0-9]+)/);
+    const trackId = match ? match[1] : null;
+
+    if (!trackId) {
+      return res.status(400).json({ error: 'URL de Spotify no válida.' });
+    }
+
+    const token = await getSpotifyToken();
+
+    const response = await axios.get(`https://api.spotify.com/v1/tracks/${trackId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const track = response.data;
+
+    const newSong = new Song({
+      titulo: track.name,
+      artista: track.artists.map((a) => a.name).join(', '),
+      album: track.album.name,
+      genero: 'Sin definir', // opcional: podrías usar audio features después
+      imagen: track.album.images[0]?.url || '',
+      url: track.external_urls.spotify,
+      trackId,
+      uri: track.uri,
+      preview_url: track.preview_url, // ⚠️ esto es lo que necesitas para reproducir
+    });
+
+    await newSong.save();
+    res.status(201).json(newSong);
   } catch (error) {
-    res.status(400).json({ error: error.message })
+    console.error("Error al añadir canción:", error.message);
+    res.status(400).json({ error: error.message });
   }
-}
+};
+
 
 exports.getSongs = async (req, res) => {
   try {
@@ -27,7 +57,7 @@ exports.searchSpotifySongs = async (req, res) => {
   const { query } = req.query;
 
   try {
-    const token = getSpotifyToken();  // Aquí obtienes el token de Spotify
+    const token = await getSpotifyToken();
     const response = await axios.get('https://api.spotify.com/v1/search', {
       headers: { Authorization: `Bearer ${token}` },
       params: { q: query, type: 'track', limit: 10 },
@@ -42,14 +72,25 @@ exports.searchSpotifySongs = async (req, res) => {
       imagen: track.album.images[0]?.url || "https://images.wondershare.com/default.jpg",
       url: track.external_urls.spotify,
       spotifyId: track.id,
-      uri: track.uri
+      uri: track.uri,
+      preview_url: track.preview_url || null
     }));
 
 
-    // Devolvemos las canciones al cliente
+    // Devolvemos las canciones
     res.json(songs);
   } catch (error) {
     console.error('Error al buscar canciones:', error);
     res.status(400).json({ error: error.message });
   }
 }
+
+exports.getSongById = async (req, res) => {
+  try {
+    const song = await Song.findById(req.params.id);                           // :contentReference[oaicite:0]{index=0}
+    if (!song) return res.status(404).json({ error: "Canción no encontrada" });
+    res.json(song);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
