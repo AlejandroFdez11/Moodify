@@ -25,15 +25,26 @@ const Perfil = () => {
   useEffect(() => {
     const fetchPlaylists = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/playlists/");
+        const token = localStorage.getItem("token"); // Obtener token del localStorage
+        
+        const res = await axios.get("http://localhost:5000/playlists/me", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
         setPlaylists(res.data);
       } catch (error) {
         console.error("Error al cargar playlists:", error);
+        if (error.response?.status === 401) {
+          logout(); // Cerrar sesión si el token es inválido
+          navigate("/login");
+        }
       }
     };
-
-    fetchPlaylists();
-  }, []);
+  
+    if (user) fetchPlaylists();
+  }, [user, navigate]);
 
   const handleLogout = () => {
     logout();
