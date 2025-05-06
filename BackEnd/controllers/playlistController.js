@@ -20,3 +20,14 @@ exports.getPlaylists = async (req, res) => {
     res.status(400).json({ error: error.message })
   }
 }
+
+exports.getMyPlaylists = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const playlists = await Playlist.find({ creador: userId }).populate("songs");
+    res.json(playlists);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
