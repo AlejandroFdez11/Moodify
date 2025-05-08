@@ -22,6 +22,6 @@ const upload = multer({
         }
         cb(null, true);
     }
-}).single('imagen'); // 'imagen' es el nombre del campo del formulario o body
+}).single('imagen');
 
 module.exports = upload;

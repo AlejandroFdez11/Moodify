@@ -19,6 +19,10 @@ const playlistSchema = new mongoose.Schema({
   isPublic:{
     type: Boolean,
     default: false
+  },
+  descripcion:{
+    type: String,
+    require: false
   }
 });
 
