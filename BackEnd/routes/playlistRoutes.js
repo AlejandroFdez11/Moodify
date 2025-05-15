@@ -1,12 +1,23 @@
 const express = require("express");
-const { createPlaylist, getPlaylists,getMyPlaylists} = require("../controllers/playlistController");
-const Auth = require("../middlewares/auth")
-const uploadPlaylistImage = require("../middlewares/uploadPlaylistsImagen")
+const {
+  createPlaylist,
+  getPlaylists,
+  getMyPlaylists,
+  addSongToPlaylist,
+  getPlaylistSongs,
+  getPlaylistById, // ✅ nuevo
+} = require("../controllers/playlistController");
+const Auth = require("../middlewares/auth");
+const uploadPlaylistImage = require("../middlewares/uploadPlaylistsImagen");
+const PlaylistVerifyOwner = require("../middlewares/authPlaylist");
 
 const router = express.Router();
 
-router.post('/', Auth, uploadPlaylistImage, createPlaylist);
+router.post("/", Auth, uploadPlaylistImage, createPlaylist);
 router.get("/", getPlaylists);
-router.get("/me",Auth,getMyPlaylists);
+router.get("/me", Auth, getMyPlaylists);
+router.post("/:playlistId/add-song", Auth, PlaylistVerifyOwner, addSongToPlaylist);
+router.get("/:playlistId/songs", getPlaylistSongs); // ✅ canciones
+router.get("/:playlistId", getPlaylistById); // ✅ detalles completos
 
 module.exports = router;
