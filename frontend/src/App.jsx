@@ -11,6 +11,7 @@ import PagError from "./pages/PagError"
 import Biblioteca from "./pages/Biblioteca"
 import Reproductor from './components/Reproductor'
 import DetallesSong from './pages/DetallesSong'
+import DetallesPlaylist from "./pages/DetallesPlaylists"
 
 const App = () => {
   return (
@@ -26,6 +27,7 @@ const App = () => {
           <Route path="/biblioteca" element={<Biblioteca/>}/>
           <Route path="/song/:id" element={<Reproductor />} />
           <Route path="/detalles/:id" element={<DetallesSong />} />
+          <Route path='/playlist/:playlistId' element={<DetallesPlaylist/>}/>
 
 
           <Route path="*" element={<PagError/>}/>
