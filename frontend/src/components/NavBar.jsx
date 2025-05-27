@@ -70,6 +70,7 @@ const Navbar = () => {
           {authenticated ? (
             <>
             <Link to="/biblioteca" className="text-gray-300 hover:text-white">📚 Biblioteca</Link>
+            <Link to="/emocion" className="text-gray-300 hover:text-white">😄 Emocionometro</Link>
               {/* Círculo con imagen de perfil */}
               <button 
                 onClick={() => navigate("/perfil")} 
