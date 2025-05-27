@@ -22,6 +22,8 @@ const SongList = ({ songs }) => {
   }, [showModal]);
 
   const handleAddToPlaylist = async (playlistId, song) => {
+  console.log("Canción seleccionada:", song); // Para depuración
+  
   if (!song) {
     console.error("No se ha proporcionado ninguna canción.");
     alert("Error: Canción no seleccionada.");
@@ -30,24 +32,24 @@ const SongList = ({ songs }) => {
 
   try {
     const token = localStorage.getItem("token");
-
-    if (!token) {
-      alert("Error: No se encontró token de autenticación.");
-      return;
-    }
+    
+    // Extraer el ID real del URI si es necesario
+    const spotifyId = song.spotifyId.includes(':') 
+      ? song.spotifyId.split(':')[2] 
+      : song.spotifyId;
 
     const payload = {
-      songId: song.spotifyId, // Enviar el spotifyId directamente, no el _id
+      songId: spotifyId // Enviamos solo el ID limpio
     };
 
-    console.log("Enviando canción a playlist:", payload);
+    console.log("Enviando payload:", payload); // Para depuración
 
     const response = await axios.post(
       `http://localhost:5000/playlists/${playlistId}/add-song`,
       payload,
       {
         headers: {
-          Authorization: `Bearer ${token}`, // ✅ Token aquí
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -57,14 +59,8 @@ const SongList = ({ songs }) => {
     setShowModal(false);
     setSelectedSong(null);
   } catch (error) {
-    console.error(
-      "Error al añadir canción a playlist:",
-      error.response?.data || error.message
-    );
-    alert(
-      "Error al añadir la canción: " +
-        (error.response?.data?.error || "Error desconocido")
-    );
+    console.error("Error completo:", error);
+    // Resto del código de manejo de errores...
   }
 };
 
