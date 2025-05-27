@@ -65,7 +65,6 @@ exports.getPlaylistSongs = async (req, res) => {
   }
 };
 
-// ✅ NUEVO MÉTODO CORRECTO PARA OBTENER DETALLES COMPLETOS
 exports.getPlaylistById = async (req, res) => {
   try {
     const playlist = await Playlist.findById(req.params.playlistId);
@@ -78,56 +77,86 @@ exports.getPlaylistById = async (req, res) => {
 };
 
 exports.addSongToPlaylist = async (req, res) => {
-  const { songId } = req.body;
-  const playlist = req.playlist;
+  try {
+    let { songId } = req.body;
+    const playlist = req.playlist;
 
-  let song = null;
+    console.log("ID recibido:", songId); // Para depuración
 
-  if (songId) {
-    song = await Song.findOne({ spotifyId: songId }).catch(() => null);
-  }
-
-  if (!song && songId) {
-    try {
-      const token = await getSpotifyToken();
-      const response = await axios.get(`https://api.spotify.com/v1/tracks/${songId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const track = response.data;
-
-      song = new Song({
-        titulo: track.name,
-        artista: track.artists.map((a) => a.name).join(", "),
-        album: track.album.name,
-        genero: "Sin definir",
-        imagen: track.album.images[0]?.url || "",
-        url: track.external_urls.spotify,
-        spotifyId: songId,
-        uri: track.uri,
-        preview_url: track.preview_url,
-        duration_ms: track.duration_ms,
-        release_date: track.album.release_date,
-        popularity: track.popularity,
-      });
-
-      await song.save();
-    } catch (error) {
-      console.error("Error al obtener canción de Spotify:", error.message);
-      return res.status(400).json({ error: "No se pudo obtener la canción desde Spotify" });
+    // Limpiar el ID si viene en formato URI
+    if (songId.startsWith('spotify:track:')) {
+      songId = songId.split(':')[2];
     }
+
+    // Validar formato del ID
+    if (!songId || typeof songId !== 'string' || songId.length < 10) {
+      return res.status(400).json({ error: "Formato de ID inválido" });
+    }
+
+    let song = await Song.findOne({ trackId: songId });
+
+    if (!song) {
+      try {
+        const token = await getSpotifyToken();
+        console.log("Buscando en Spotify ID:", songId); // Para depuración
+        
+        const response = await axios.get(`https://api.spotify.com/v1/tracks/${songId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const track = response.data;
+
+        // Validar datos esenciales
+        if (!track.name || !track.artists) {
+          throw new Error("Datos incompletos de Spotify");
+        }
+
+        song = new Song({
+          titulo: track.name,
+          artista: track.artists.map((a) => a.name).join(", "),
+          album: track.album.name,
+          genero: track.genres?.join(", ") || "Sin definir",
+          imagen: track.album.images[0]?.url || "",
+          url: track.external_urls.spotify,
+          trackId: songId, // Usamos el ID limpio
+          uri: `spotify:track:${songId}`, // Generamos el URI correcto
+          preview_url: track.preview_url,
+          duration_ms: track.duration_ms,
+          release_date: track.album.release_date,
+          popularity: track.popularity,
+        });
+
+        await song.save();
+        console.log("Canción guardada en DB:", song); // Para depuración
+      } catch (error) {
+        console.error("Error al obtener canción de Spotify:", error.message);
+        return res.status(400).json({ 
+          error: "No se pudo obtener la canción desde Spotify",
+          details: error.message 
+        });
+      }
+    }
+
+    if (playlist.songs.includes(song._id)) {
+      return res.status(400).json({ error: "La canción ya está en la playlist" });
+    }
+
+    playlist.songs.push(song._id);
+    await playlist.save();
+
+    res.json({ 
+      message: "Canción añadida correctamente", 
+      playlist: {
+        ...playlist._doc,
+        songs: playlist.songs.length // Opcional: para no enviar toda la lista
+      }
+    });
+
+  } catch (error) {
+    console.error("Error general:", error);
+    res.status(500).json({ 
+      error: "Error interno del servidor",
+      details: error.message 
+    });
   }
-
-  if (!song) {
-    return res.status(400).json({ error: "No se pudo obtener o encontrar la canción" });
-  }
-
-  if (playlist.songs.includes(song._id)) {
-    return res.status(400).json({ error: "La canción ya está en la playlist" });
-  }
-
-  playlist.songs.push(song._id);
-  await playlist.save();
-
-  res.json({ message: "Canción añadida correctamente", playlist });
 };
