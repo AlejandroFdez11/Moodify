@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import Notification from "./Notificacion";
 
 const SongList = ({ songs }) => {
-  const [loading, setLoading] = useState(false);
   const [dropdownIndex, setDropdownIndex] = useState(null);
   const [playlists, setPlaylists] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedSong, setSelectedSong] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+
 
   const token = localStorage.getItem("token");
 
@@ -26,7 +28,7 @@ const SongList = ({ songs }) => {
   
   if (!song) {
     console.error("No se ha proporcionado ninguna canción.");
-    alert("Error: Canción no seleccionada.");
+    addNotification("Error: Canción no seleccionada.","error");
     return;
   }
 
@@ -42,7 +44,7 @@ const SongList = ({ songs }) => {
       songId: spotifyId // Enviamos solo el ID limpio
     };
 
-    console.log("Enviando payload:", payload); // Para depuración
+    console.log("Enviando payload:", payload);
 
     const response = await axios.post(
       `http://localhost:5000/playlists/${playlistId}/add-song`,
@@ -55,7 +57,7 @@ const SongList = ({ songs }) => {
     );
 
     console.log("Respuesta del servidor:", response.data);
-    alert("Canción añadida correctamente a la playlist.");
+    addNotification("Canción añadida correctamente a la playlist", "success");
     setShowModal(false);
     setSelectedSong(null);
   } catch (error) {
@@ -80,9 +82,31 @@ const SongList = ({ songs }) => {
     }
   };
 
+  const addNotification = (message, type) => {
+    const id = Date.now();
+    setNotifications((prev) => [...prev, { id, message, type }]);
+  };
+
+   const removeNotification = (id) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
   return (
     <div className="bg-gray-900 p-6 rounded-lg shadow-md">
       <h2 className="text-white text-xl mb-4">Lista de Canciones</h2>
+
+      {/* Notificaciones flotantes */}
+      <div className="fixed top-4 right-4 space-y-2 z-[999]">
+        {notifications.map((notification) => (
+          <Notification
+            key={notification.id}
+            message={notification.message}
+            type={notification.type}
+            onClose={() => removeNotification(notification.id)}
+          />
+        ))}
+      </div>
+
       <ul className="space-y-3">
         {songs.length > 0 ? (
           songs.map((song, index) => (
