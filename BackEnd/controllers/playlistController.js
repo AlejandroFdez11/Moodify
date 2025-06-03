@@ -81,8 +81,6 @@ exports.addSongToPlaylist = async (req, res) => {
     let { songId } = req.body;
     const playlist = req.playlist;
 
-    console.log("ID recibido:", songId); // Para depuración
-
     // Limpiar el ID si viene en formato URI
     if (songId.startsWith('spotify:track:')) {
       songId = songId.split(':')[2];
@@ -98,7 +96,6 @@ exports.addSongToPlaylist = async (req, res) => {
     if (!song) {
       try {
         const token = await getSpotifyToken();
-        console.log("Buscando en Spotify ID:", songId); // Para depuración
         
         const response = await axios.get(`https://api.spotify.com/v1/tracks/${songId}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -118,8 +115,8 @@ exports.addSongToPlaylist = async (req, res) => {
           genero: track.genres?.join(", ") || "Sin definir",
           imagen: track.album.images[0]?.url || "",
           url: track.external_urls.spotify,
-          trackId: songId, // Usamos el ID limpio
-          uri: `spotify:track:${songId}`, // Generamos el URI correcto
+          trackId: songId,
+          uri: `spotify:track:${songId}`,
           preview_url: track.preview_url,
           duration_ms: track.duration_ms,
           release_date: track.album.release_date,
@@ -127,7 +124,6 @@ exports.addSongToPlaylist = async (req, res) => {
         });
 
         await song.save();
-        console.log("Canción guardada en DB:", song); // Para depuración
       } catch (error) {
         console.error("Error al obtener canción de Spotify:", error.message);
         return res.status(400).json({ 
@@ -148,7 +144,7 @@ exports.addSongToPlaylist = async (req, res) => {
       message: "Canción añadida correctamente", 
       playlist: {
         ...playlist._doc,
-        songs: playlist.songs.length // Opcional: para no enviar toda la lista
+        songs: playlist.songs.length
       }
     });
 
