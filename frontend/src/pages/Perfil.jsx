@@ -117,6 +117,7 @@ const Perfil = () => {
       };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event("imageUpdated"));
       
       // Recargar para actualizar navbar
       window.location.reload();
