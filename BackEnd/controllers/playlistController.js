@@ -156,3 +156,26 @@ exports.addSongToPlaylist = async (req, res) => {
     });
   }
 };
+
+exports.deletePlaylist = async (req, res) => {
+  try {
+    const playlistId = req.params.playlistId;
+    const userId = req.user.id;
+
+    const playlist = await Playlist.findById(playlistId);
+    if (!playlist) {
+      return res.status(404).json({ error: "Playlist no encontrada" });
+    }
+
+    if (playlist.creador.toString() !== userId) {
+      return res.status(403).json({ error: "No tienes permiso para eliminar esta playlist" });
+    }
+
+    await Playlist.findByIdAndDelete(playlistId);
+
+    res.json({ message: "Playlist eliminada correctamente" });
+  } catch (error) {
+    console.error("Error al eliminar la playlist:", error);
+    res.status(500).json({ error: "Error interno al eliminar la playlist" });
+  }
+};

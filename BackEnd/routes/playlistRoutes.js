@@ -1,12 +1,5 @@
 const express = require("express");
-const {
-  createPlaylist,
-  getPlaylists,
-  getMyPlaylists,
-  addSongToPlaylist,
-  getPlaylistSongs,
-  getPlaylistById, // ✅ nuevo
-} = require("../controllers/playlistController");
+const {createPlaylist,getPlaylists,getMyPlaylists,addSongToPlaylist,getPlaylistSongs,getPlaylistById,deletePlaylist} = require("../controllers/playlistController");
 const Auth = require("../middlewares/auth");
 const uploadPlaylistImage = require("../middlewares/uploadPlaylistsImagen");
 const PlaylistVerifyOwner = require("../middlewares/authPlaylist");
@@ -17,7 +10,8 @@ router.post("/", Auth, uploadPlaylistImage, createPlaylist);
 router.get("/", getPlaylists);
 router.get("/me", Auth, getMyPlaylists);
 router.post("/:playlistId/add-song", Auth, PlaylistVerifyOwner, addSongToPlaylist);
-router.get("/:playlistId/songs", getPlaylistSongs); // ✅ canciones
-router.get("/:playlistId", getPlaylistById); // ✅ detalles completos
+router.get("/:playlistId/songs", getPlaylistSongs);
+router.get("/:playlistId", getPlaylistById);
+router.delete("/:playlistId",Auth,PlaylistVerifyOwner,deletePlaylist);
 
 module.exports = router;
