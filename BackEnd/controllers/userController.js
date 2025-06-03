@@ -38,35 +38,60 @@ exports.loginUser = async (req, res) => {
     }
 }
 
+//Obtener todos los datos de un usuario
+exports.getUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .select('-password')
+      .populate('playlists', 'name imagen');
+
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener los datos del usuario' });
+  }
+};
+
 // Actualizar imagen de perfil
 exports.updateProfileImage = async (req, res) => {
-  const { token } = req.body;
+  const token = req.body.token;
+  const imageUrl = req.body.imageUrl;
 
-  if (!req.file) {
-      return res.status(400).json({ error: 'No se ha proporcionado una imagen' });
+  if (!req.file && !imageUrl) {
+    return res.status(400).json({ error: 'No se ha proporcionado una imagen o URL' });
   }
 
-  // Obtener el ID del usuario desde el token
   try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userId = decoded.id;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
 
-      // Buscar el usuario en la base de datos
-      const user = await User.findById(userId);
-      if (!user) {
-          return res.status(404).json({ error: 'Usuario no encontrado' });
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    let finalImageUrl;
+    if (req.file) {
+      finalImageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+    } else if (imageUrl) {
+      try {
+        new URL(imageUrl);
+        finalImageUrl = imageUrl;
+      } catch (error) {
+        return res.status(400).json({ error: 'URL de imagen inválida' });
       }
+    }
 
-      // Guardar la URL de la imagen de perfil en la base de datos
-      const imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
-      user.imagenPerfil = imageUrl;
+    user.imagenPerfil = finalImageUrl;
+    await user.save();
 
-      // Guardar los cambios en la base de datos
-      await user.save();
-
-      res.status(200).json({ message: 'Imagen de perfil actualizada', imagenPerfil: imageUrl });
+    res.status(200).json({ 
+      message: 'Imagen de perfil actualizada', 
+      imagenPerfil: finalImageUrl 
+    });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Hubo un error al actualizar la imagen de perfil' });
+    console.error(error);
+    res.status(500).json({ error: 'Hubo un error al actualizar la imagen de perfil' });
   }
 };
