@@ -1,4 +1,5 @@
 import PlaylistCard from "../components/PlayListCard";
+import Notification from "../components/Notificacion";
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +11,7 @@ const Biblioteca = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [imagenFile, setImagenFile] = useState(null);
+  const [notification, setNotification] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     imagen: "",
@@ -102,9 +104,10 @@ const Biblioteca = () => {
       setShowForm(false);
       setFormData({ name: "", imagen: "", descripcion: "", isPublic: false });
       setImagenFile(null);
+      setNotification({message:"Playlists creada correctamente", type: "success"})
     } catch (err) {
       console.error("Error al crear playlist:", err);
-      alert("Error al crear la playlist");
+      setNotification({ message: "Error al crear la playlist", type: "error" });
     }
   };
 
@@ -118,6 +121,13 @@ const Biblioteca = () => {
 
   return (
     <div className="p-6 bg-gray-900 min-h-screen">
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-white">Mis Playlists</h1>
         <button

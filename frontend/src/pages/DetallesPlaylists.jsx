@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate,Link} from "react-router-dom";
 import axios from "axios";
 import { FaTrash, FaPlay } from "react-icons/fa";
+import Notification from "../components/Notificacion";
 
 const DetallesPlaylist = () => {
   const { playlistId } = useParams();
   const navigate = useNavigate();
   const [playlist, setPlaylist] = useState(null);
   const [songs, setSongs] = useState([]);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,10 +29,53 @@ const DetallesPlaylist = () => {
     fetchData();
   }, [playlistId]);
 
+  const confirmDelete = () => {
+    setNotification({
+      message: "¿Estás seguro de que deseas eliminar esta playlist?",
+      type: "confirm",
+      onConfirm: handleDelete,
+      onCancel: () => setNotification(null),
+    });
+  };
+
+  const handleDelete = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:5000/playlists/${playlistId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setNotification({
+        message: "Playlist eliminada correctamente",
+        type: "success"
+      });
+      setTimeout(() => {
+        navigate(-1)
+      }, 2000);
+    } catch (error) {
+      console.error("Error al eliminar la playlist:", error);
+      setNotification({
+        message: "No se pudo eliminar la playlist",
+        type: "error",
+      });
+    }
+  };
+
   if (!playlist) return <p className="text-white p-4">Cargando...</p>;
 
   return (
     <div className="p-6">
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+          onConfirm={notification.onConfirm}
+          onCancel={notification.onCancel}
+        />
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <img
@@ -47,7 +92,7 @@ const DetallesPlaylist = () => {
         </div>
         <button
           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-          onClick={() => alert("Eliminar playlist aún no implementado")}
+          onClick={confirmDelete}
         >
           Eliminar Playlist
         </button>
