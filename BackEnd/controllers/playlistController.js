@@ -179,3 +179,21 @@ exports.deletePlaylist = async (req, res) => {
     res.status(500).json({ error: "Error interno al eliminar la playlist" });
   }
 };
+
+// Eliminar una canción específica de una playlist
+exports.removeSongFromPlaylist = async (req, res) => {
+  const { playlistId, songId } = req.params;
+
+  try {
+    const playlist = await Playlist.findById(playlistId);
+    if (!playlist) return res.status(404).json({ error: "Playlist no encontrada" });
+
+    playlist.songs = playlist.songs.filter(id => id.toString() !== songId);
+    await playlist.save();
+
+    res.status(200).json({ message: "Canción eliminada de la playlist" });
+  } catch (error) {
+    console.error("Error al eliminar canción:", error);
+    res.status(500).json({ error: "Error al eliminar canción de la playlist" });
+  }
+};

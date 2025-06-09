@@ -7,6 +7,7 @@ const mongoose = require("mongoose")
 const userRoutes = require("./routes/userRoutes")
 const songRoutes = require("./routes/songRoutes")
 const playlistRoutes = require("./routes/playlistRoutes")
+const spotifyRouter = require ("./routes/spotifyRouter")
 const { authenticateSpotify } = require("./config/spotifyConfig")
 const path = require('path');
 
@@ -27,6 +28,8 @@ mongoose.connect(process.env.MONGO_URL)
 app.use("/users",userRoutes)
 app.use("/songs",songRoutes)
 app.use("/playlists",playlistRoutes)
+app.use("spotify",spotifyRouter)
+
 
 //Autentificación con Spotify
 authenticateSpotify()

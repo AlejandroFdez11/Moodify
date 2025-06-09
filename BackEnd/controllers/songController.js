@@ -56,39 +56,7 @@ exports.getSongs = async (req, res) => {
   }
 }
 
-exports.searchSpotifySongs = async (req, res) => {
-  const { query } = req.query;
 
-  try {
-    const token = await getSpotifyToken();
-    const response = await axios.get('https://api.spotify.com/v1/search', {
-      headers: { Authorization: `Bearer ${token}` },
-      params: { q: query, type: 'track', limit: 10 },
-    });
-
-    // Mapeamos los resultados para extraer solo la información necesaria
-    const songs = response.data.tracks.items.map((track) => ({
-      titulo: track.name,
-      artista: track.artists.map((a) => a.name).join(", "),
-      album: track.album.name,
-      genero: "Sin definir",
-      imagen: track.album.images[0]?.url || "https://images.wondershare.com/default.jpg",
-      url: track.external_urls.spotify,
-      spotifyId: track.id,
-      uri: track.uri,
-      preview_url: track.preview_url || null,
-      duration_ms: track.duration_ms, 
-      release_date: track.album.release_date, 
-      popularity: track.popularity, 
-    }));
-
-    // Devolvemos las canciones
-    res.json(songs);
-  } catch (error) {
-    console.error('Error al buscar canciones:', error);
-    res.status(400).json({ error: error.message });
-  }
-};
 
 exports.getSongById = async (req, res) => {
   try {
