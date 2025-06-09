@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import SongList from "../components/SongList";
-import PlaylistCard from "../components/PlaylistCard";
 import ArtistCard from "../components/ArtistCard";
-import { Link } from "react-router-dom";
+import SimplePlaylistCard from "../components/SimplePlaylistCard";
 
 const Buscador = () => {
   const [songs, setSongs] = useState([]);
@@ -69,29 +68,21 @@ const Buscador = () => {
       )}
 
       {/* PLAYLISTS */}
+      {/* PLAYLISTS */}
       {playlists.length > 0 && (
         <>
           <h2 className="text-2xl text-white mt-8 mb-2">Playlists</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
             {playlists.map((pl) => (
-              <div key={pl.id}>
-                <PlaylistCard
-                  playlist={{
-                    _id: pl.id,
-                    name: pl.nombre,
-                    imagen: pl.imagen,
-                    descripcion: pl.descripcion,
-                  }}
-                />
-                <div className="mt-2">
-                  <Link
-                    to={`/spotify/playlist/${pl.id}`}
-                    className="text-green-400 hover:underline text-sm"
-                  >
-                    Ver detalles
-                  </Link>
-                </div>
-              </div>
+              <SimplePlaylistCard
+                key={pl.id}
+                playlist={{
+                  _id: pl.id,
+                  name: pl.nombre,
+                  imagen: pl.imagen,
+                  descripcion: pl.descripcion,
+                }}
+              />
             ))}
           </div>
         </>
