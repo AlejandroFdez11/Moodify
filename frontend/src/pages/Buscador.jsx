@@ -2,40 +2,99 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import SongList from "../components/SongList";
+import PlaylistCard from "../components/PlaylistCard";
+import ArtistCard from "../components/ArtistCard";
+import { Link } from "react-router-dom";
 
 const Buscador = () => {
-  const [results, setResults] = useState([]);
+  const [songs, setSongs] = useState([]);
+  const [artists, setArtists] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
   const location = useLocation();
-  
-  // Obtener la consulta de búsqueda desde la URL
+
   const queryParams = new URLSearchParams(location.search);
   const query = queryParams.get("query");
 
   useEffect(() => {
-    const fetchSongs = async () => {
+    const fetchAll = async () => {
       try {
-        // Buscar canciones en Spotify usando el query
-        const { data } = await axios.get(`http://localhost:5000/songs/search`, {
-          params: { query },
-        });
-        setResults(data); // Actualizar los resultados
+        const [songsRes, artistsRes, playlistsRes] = await Promise.all([
+          axios.get("http://localhost:5000/spotify/songs", {
+            params: { query },
+          }),
+          axios.get("http://localhost:5000/spotify/artists", {
+            params: { query },
+          }),
+          axios.get("http://localhost:5000/spotify/playlists", {
+            params: { query },
+          }),
+        ]);
+        setSongs(songsRes.data);
+        setArtists(artistsRes.data);
+        setPlaylists(playlistsRes.data);
       } catch (error) {
-        console.error("Error al buscar canciones:", error);
+        console.error("Error al buscar:", error);
       }
     };
 
-    if (query) fetchSongs();
-  }, [query]); // Se ejecuta cuando el query cambia
+    if (query) fetchAll();
+  }, [query]);
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold text-white mb-4">Resultados de búsqueda</h1>
-      
-      {/* Mostrar resultados de la búsqueda */}
-      {results.length > 0 ? (
-        <SongList songs={results} />
+      <h1 className="text-3xl font-bold text-white mb-6">
+        Resultados para: <span className="text-green-400">"{query}"</span>
+      </h1>
+
+      {/* ARTISTAS */}
+      {artists.length > 0 && (
+        <>
+          <h2 className="text-2xl text-white mb-2">Artistas</h2>
+          <div className="flex overflow-x-auto gap-4 pb-4">
+            {artists.map((artist) => (
+              <div key={artist.id} className="flex-shrink-0 w-48">
+                <ArtistCard artist={artist} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* CANCIONES */}
+      <h2 className="text-2xl text-white mt-8 mb-2">Canciones</h2>
+      {songs.length > 0 ? (
+        <SongList songs={songs} />
       ) : (
-        <p className="text-gray-400">No se encontraron canciones para "{query}"</p>
+        <p className="text-gray-400">No se encontraron canciones.</p>
+      )}
+
+      {/* PLAYLISTS */}
+      {playlists.length > 0 && (
+        <>
+          <h2 className="text-2xl text-white mt-8 mb-2">Playlists</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+            {playlists.map((pl) => (
+              <div key={pl.id}>
+                <PlaylistCard
+                  playlist={{
+                    _id: pl.id,
+                    name: pl.nombre,
+                    imagen: pl.imagen,
+                    descripcion: pl.descripcion,
+                  }}
+                />
+                <div className="mt-2">
+                  <Link
+                    to={`/spotify/playlist/${pl.id}`}
+                    className="text-green-400 hover:underline text-sm"
+                  >
+                    Ver detalles
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
