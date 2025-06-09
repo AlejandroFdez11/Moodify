@@ -1,4 +1,3 @@
-// src/components/EmotionCard.jsx
 import { Link } from "react-router-dom";
 
 const EmotionCard = ({ emotion }) => {

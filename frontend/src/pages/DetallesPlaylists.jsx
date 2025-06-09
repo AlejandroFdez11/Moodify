@@ -62,6 +62,32 @@ const DetallesPlaylist = () => {
     }
   };
 
+  const handleRemoveSong = async (songId) => {
+  try {
+    const token = localStorage.getItem("token");
+    await axios.delete(
+      `http://localhost:5000/playlists/${playlistId}/song/${songId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    setNotification({
+        message: "Canción eliminada correctamente",
+        type: "success"
+      });
+
+    // Actualiza la lista sin recargar
+    setSongs((prevSongs) => prevSongs.filter((s) => s._id !== songId));
+  } catch (error) {
+    console.error("Error al eliminar la canción:", error);
+    setNotification({
+      message: "No se puede eliminar la cación de la playlists",
+      type: "error"
+    })
+  }
+};
+
+
   if (!playlist) return <p className="text-white p-4">Cargando...</p>;
 
   return (
@@ -132,7 +158,7 @@ const DetallesPlaylist = () => {
                 <button
                   className="text-red-500 hover:text-red-400"
                   title="Eliminar de playlist"
-                  onClick={() => alert("Eliminar canción aún no implementado")}
+                  onClick={() => handleRemoveSong(song._id)}
                 >
                   <FaTrash />
                 </button>
