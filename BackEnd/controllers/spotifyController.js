@@ -7,22 +7,39 @@ const { spotifyApi, refreshToken } = require("../services/spotify");
 
 exports.searchSpotifyPlaylists = async (req, res) => {
   const { query } = req.query;
+
+  if (!query || query.trim() === "") {
+    return res.status(400).json({ error: "El parámetro 'query' es obligatorio." });
+  }
+
   try {
     const token = await getSpotifyToken();
     const resp = await axios.get('https://api.spotify.com/v1/search', {
       headers: { Authorization: `Bearer ${token}` },
       params: { q: query, type: 'playlist', limit: 10 }
     });
-    const playlists = resp.data.playlists.items.map(pl => ({
-      id: pl.id,
-      nombre: pl.name,
-      imagen: pl.images[0]?.url || null,
-      descripcion: pl.description || ''
-    }));
+
+    if (
+      !resp.data ||
+      !resp.data.playlists ||
+      !Array.isArray(resp.data.playlists.items)
+    ) {
+      return res.status(500).json({ error: "Respuesta inesperada de la API de Spotify." });
+    }
+
+    const playlists = resp.data.playlists.items
+      .filter(pl => pl && pl.id)
+      .map(pl => ({
+        id: pl.id,
+        nombre: pl.name,
+        imagen: pl.images?.[0]?.url || null,
+        descripcion: pl.description || ''
+      }));
+
     res.json(playlists);
   } catch (error) {
     console.error('Error al buscar playlists:', error);
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error.message || "Error inesperado" });
   }
 };
 
@@ -83,26 +100,35 @@ exports.searchSpotifySongs = async (req, res) => {
 
 exports.getSpotifyPlaylistById = async (req, res) => {
   const playlistId = req.params.id;
+
+  if (!playlistId) {
+    return res.status(400).json({ error: "ID de playlist no proporcionado" });
+  }
+
   try {
     await refreshToken();
-    const data = await spotifyApi.getPlaylist(playlistId); // adaptalo según tu código
+
+    const response = await spotifyApi.getPlaylist(playlistId);
+    const data = response.body;
 
     const playlistInfo = {
-      id: data.body.id,
-      nombre: data.body.name,
-      descripcion: data.body.description,
-      imagen: data.body.images[0]?.url,
-      tracks: data.body.tracks.items.map((item) => ({
-        titulo: item.track.name,
-        artista: item.track.artists.map((a) => a.name).join(", "),
-        imagen: item.track.album.images[0]?.url,
-      })),
+      id: data.id,
+      nombre: data.name,
+      descripcion: data.description,
+      imagen: data.images?.[0]?.url || null,
+      tracks: data.tracks.items
+        .filter(item => item && item.track)
+        .map(item => ({
+          titulo: item.track.name,
+          artista: item.track.artists.map((a) => a.name).join(", "),
+          imagen: item.track.album.images?.[0]?.url || null,
+        })),
     };
 
     res.json(playlistInfo);
   } catch (error) {
-    console.error("Error al obtener la playlist de Spotify:", error);
-    res.status(500).json({ error: "Error al obtener la playlist de Spotify" });
+    console.error("Error al obtener la playlist de Spotify:", error?.response?.body || error.message);
+    res.status(500).json({ error: "No se pudo obtener la playlist de Spotify." });
   }
 };
 
