@@ -1,4 +1,9 @@
-
+const Playlist = require("../models/Playlist");
+const Song = require("../models/Song");
+const Artista = require("../models/Artista");
+const axios = require("axios");
+const { getSpotifyToken } = require("../config/spotifyConfig");
+const { spotifyApi, refreshToken } = require("../services/spotify");
 
 exports.searchSpotifyPlaylists = async (req, res) => {
   const { query } = req.query;
@@ -75,3 +80,29 @@ exports.searchSpotifySongs = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+exports.getSpotifyPlaylistById = async (req, res) => {
+  const playlistId = req.params.id;
+  try {
+    await refreshToken();
+    const data = await spotifyApi.getPlaylist(playlistId); // adaptalo según tu código
+
+    const playlistInfo = {
+      id: data.body.id,
+      nombre: data.body.name,
+      descripcion: data.body.description,
+      imagen: data.body.images[0]?.url,
+      tracks: data.body.tracks.items.map((item) => ({
+        titulo: item.track.name,
+        artista: item.track.artists.map((a) => a.name).join(", "),
+        imagen: item.track.album.images[0]?.url,
+      })),
+    };
+
+    res.json(playlistInfo);
+  } catch (error) {
+    console.error("Error al obtener la playlist de Spotify:", error);
+    res.status(500).json({ error: "Error al obtener la playlist de Spotify" });
+  }
+};
+

@@ -28,7 +28,7 @@ mongoose.connect(process.env.MONGO_URL)
 app.use("/users",userRoutes)
 app.use("/songs",songRoutes)
 app.use("/playlists",playlistRoutes)
-app.use("spotify",spotifyRouter)
+app.use("/spotify",spotifyRouter)
 
 
 //Autentificación con Spotify
