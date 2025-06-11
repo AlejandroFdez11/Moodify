@@ -4,6 +4,7 @@ import { logout } from "../services/Auth";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import PlaylistCard from "../components/PlayListCard";
+import Notification from "../components/Notificacion";
 
 const Perfil = () => {
   const [user, setUser] = useState(null);
@@ -13,6 +14,7 @@ const Perfil = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [notification, setNotification] = useState(null);
   const navigate = useNavigate();
 
   // Obtener datos del usuario desde el backend
@@ -43,7 +45,6 @@ const Perfil = () => {
       }
     };
 
-    // Siempre obtener datos frescos del backend al cargar el perfil
     fetchUserData();
   }, [navigate]);
 
@@ -91,14 +92,20 @@ const Perfil = () => {
           new URL(imageUrl); // Validar URL
           formData.append("imageUrl", imageUrl);
         } catch (error) {
-          alert("Por favor ingresa una URL válida");
+          setNotification({
+            message: "Por favor ingresa una URL válida",
+            type: "error",
+          });
           setIsLoading(false);
           return;
         }
       } else if (imageOption === "file" && selectedFile) {
         formData.append("imagen", selectedFile);
       } else {
-        alert("Por favor selecciona una imagen");
+        setNotification({
+          message: "Por favor selecciona una imagen",
+          type: "error",
+        });
         setIsLoading(false);
         return;
       }
@@ -126,7 +133,10 @@ const Perfil = () => {
       window.location.reload();
     } catch (error) {
       console.error("Error al actualizar la imagen:", error);
-      alert(error.response?.data?.error || "Error al actualizar la imagen");
+      setNotification({
+        message: error.response?.data?.error || "Error al actualizar la imagen",
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
       setShowUploadModal(false);
@@ -140,7 +150,10 @@ const Perfil = () => {
     if (file && file.type.startsWith("image/")) {
       setSelectedFile(file);
     } else {
-      alert("Por favor selecciona un archivo de imagen válido");
+      setNotification({
+        message: "Por favor selecciona un archivo de imagen válido",
+        type: "error",
+      });
       setSelectedFile(null);
     }
   };
@@ -161,15 +174,34 @@ const Perfil = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Correo de verificación enviado. Revisa tu bandeja de entrada.");
+      setNotification({
+        message:
+          "Correo de verificación enviado. Revisa tu bandeja de entrada.",
+        type: "success",
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
-      alert("Error al enviar correo de verificación.");
+      setNotification({
+        message: "Error al enviar correo de verificación.",
+        type: "error",
+      });
       console.error(error);
     }
   };
 
   return (
     <div className="bg-gray-900 min-h-screen text-white p-6">
+      {/* Notificación */}
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
       {/* Modal para cambiar imagen */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
@@ -276,7 +308,20 @@ const Perfil = () => {
             </svg>
           </button>
         </div>
-        <h1 className="text-3xl font-bold mt-4">{user.name}</h1>
+        <h1 className="text-3xl font-bold mt-4 flex items-center justify-center gap-2">
+          {user.name}
+          {user.isVerified && (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-blue-500"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              title="Usuario verificado"
+            >
+              <path d="M12 2a10 10 0 1010 10A10.011 10.011 0 0012 2zm-1.25 14.5l-4.5-4.5 1.414-1.414 3.086 3.086 6.086-6.086L18.5 9.5z" />
+            </svg>
+          )}
+        </h1>
         <p className="text-gray-400">{user.email}</p>
         <p className="text-gray-400 mb-4">Miembro Moodify</p>
         <button
@@ -285,12 +330,16 @@ const Perfil = () => {
         >
           Cerrar sesión
         </button>
-        <button
-          onClick={handleSendVerificationEmail}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full"
-        >
-          Verificar correo
-        </button>
+
+        {/* Solo mostrar botón si NO está verificado */}
+        {!user.isVerified && (
+          <button
+            onClick={handleSendVerificationEmail}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full mt-3"
+          >
+            Verificar correo
+          </button>
+        )}
       </div>
 
       {/* Sección de playlists */}
@@ -352,13 +401,7 @@ const Perfil = () => {
               Fecha de registro
             </h3>
             <p className="text-lg">
-              {new Date(user.fechaRegistro).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="bg-gray-700 p-4 rounded-lg">
-            <h3 className="font-medium text-gray-400 mb-2">Tus playlists</h3>
-            <p className="text-lg">
-              {playlists.length} playlist{playlists.length !== 1 ? "s" : ""}
+              {new Date(user.createdAt).toLocaleDateString()}
             </p>
           </div>
         </div>
