@@ -293,7 +293,7 @@ const Perfil = () => {
             </svg>
             <p className="text-gray-400 mb-4">No tienes playlists todavía</p>
             <button
-              onClick={() => navigate("/create-playlist")}
+              onClick={() => navigate("/biblioteca")}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full"
             >
               Crear mi primera playlist
@@ -317,7 +317,7 @@ const Perfil = () => {
           <div className="bg-gray-700 p-4 rounded-lg">
             <h3 className="font-medium text-gray-400 mb-2">Fecha de registro</h3>
             <p className="text-lg">
-              {new Date(user.createdAt).toLocaleDateString()}
+              {new Date(user.fechaRegistro).toLocaleDateString()}
             </p>
           </div>
           <div className="bg-gray-700 p-4 rounded-lg">

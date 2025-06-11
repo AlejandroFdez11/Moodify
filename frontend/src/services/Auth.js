@@ -4,8 +4,16 @@ import { jwtDecode } from "jwt-decode";
 const URL_API= "http://localhost:5000/";
 
 export const register = async (datosUsuario) =>{
-    const res = await axios.post(`${URL_API}users/register`,datosUsuario)
-    return res.data
+    try {
+        const res = await axios.post(`${URL_API}users/register`,datosUsuario)
+        return res.data
+    } catch (error) {
+        if (error.response && error.response.data) {
+            throw error;
+        }
+        throw new Error("Error de conexión");
+    }
+    
 }
 
 export const login = async (datosUsuario) =>{
