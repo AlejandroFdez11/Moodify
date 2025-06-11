@@ -197,3 +197,49 @@ exports.removeSongFromPlaylist = async (req, res) => {
     res.status(500).json({ error: "Error al eliminar canción de la playlist" });
   }
 };
+
+exports.getPlaylistsPorArtistas = async (req, res) => {
+  const { artistas } = req.query;
+
+  if (!artistas) {
+    return res.status(400).json({ error: "Lista de artistas requerida" });
+  }
+
+  try {
+    const token = await getAccessToken();
+    const artistasArray = artistas
+  .split(",")
+  .map((a) => decodeURIComponent(a.trim()))
+  .slice(0, 5);
+
+
+    const allPlaylists = [];
+
+    for (const artista of artistasArray) {
+      const response = await axios.get("https://api.spotify.com/v1/search", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          q: artista,
+          type: "playlist",
+          limit: 3,
+        },
+      });
+
+      const playlists = response.data.playlists.items.map((p) => ({
+        id: p.id,
+        nombre: p.name,
+        imagen: p.images[0]?.url || "",
+        descripcion: p.description || "",
+      }));
+
+      allPlaylists.push(...playlists);
+    }
+
+    res.json(allPlaylists);
+  } catch (err) {
+    console.error("Error al buscar playlists por artistas:", err.message);
+    res.status(500).json({ error: "Error al buscar playlists" });
+  }
+};

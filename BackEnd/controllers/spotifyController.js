@@ -1,6 +1,3 @@
-const Playlist = require("../models/Playlist");
-const Song = require("../models/Song");
-const Artista = require("../models/Artista");
 const axios = require("axios");
 const { getSpotifyToken } = require("../config/spotifyConfig");
 const { spotifyApi, refreshToken } = require("../services/spotify");
@@ -33,7 +30,7 @@ exports.searchSpotifyPlaylists = async (req, res) => {
         id: pl.id,
         nombre: pl.name,
         imagen: pl.images?.[0]?.url || null,
-        descripcion: pl.description || ''
+        descripcion: pl.description || 'Álbum de música'
       }));
 
     res.json(playlists);
