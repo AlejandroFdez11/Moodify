@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import SongList from "../components/SongList";
 
 const DetallesPlaylistSpotify = () => {
   const { id } = useParams();
@@ -12,18 +13,28 @@ const DetallesPlaylistSpotify = () => {
       try {
         const res = await axios.get(`http://localhost:5000/spotify/playlists/${id}`);
         setPlaylist(res.data);
-        setSongs(res.data.tracks || []);
+
+        // Formatear canciones asegurando que tengan un 'spotifyId'
+        const formattedSongs = (res.data.tracks || []).map((song) => ({
+          ...song,
+          spotifyId: song.spotifyId,
+        }));
+
+        console.log(formattedSongs)
+
+        setSongs(formattedSongs);
       } catch (err) {
         console.error("Error al obtener la playlist de Spotify:", err);
       }
     };
+
     fetchData();
   }, [id]);
 
   if (!playlist) return <p className="text-white p-4">Cargando...</p>;
 
   return (
-    <div className="p-6 text-white">
+    <div className="p-6 text-white min-h-screen bg-gray-900">
       <div className="flex items-center gap-4 mb-6">
         <img
           src={playlist.imagen}
@@ -36,25 +47,7 @@ const DetallesPlaylistSpotify = () => {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {songs.length > 0 ? (
-          songs.map((song, index) => (
-            <div key={index} className="flex gap-4 items-center bg-gray-700 p-3 rounded">
-              <img
-                src={song.imagen}
-                alt={song.titulo}
-                className="w-12 h-12 object-cover rounded"
-              />
-              <div>
-                <p className="font-semibold">{song.titulo}</p>
-                <p className="text-gray-400 text-sm">{song.artista}</p>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-400">No hay canciones en esta playlist.</p>
-        )}
-      </div>
+      <SongList songs={songs} />
     </div>
   );
 };
