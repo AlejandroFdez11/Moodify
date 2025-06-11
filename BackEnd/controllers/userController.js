@@ -2,6 +2,7 @@ const User = require ("../models/User")
 const bcrypt = require ("bcryptjs")
 const jwt = require ("jsonwebtoken")
 const upload = require("../middlewares/uploadImagen")
+const nodemailer = require('nodemailer');
 
 exports.registerUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -115,5 +116,67 @@ exports.updateProfileImage = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Hubo un error al actualizar la imagen de perfil' });
+  }
+};
+
+const jwtSecret = process.env.JWT_SECRET;
+
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+exports.sendVerificationEmail = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
+
+    if (user.isVerified) {
+      return res.status(400).json({ error: "Usuario ya está verificado" });
+    }
+
+    const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '1h' });
+    const verifyUrl = `http://localhost:5000/verify-email/${token}`;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Verifica tu correo en Moodify",
+      html: `
+        <p>Hola ${user.name},</p>
+        <p>Para verificar tu cuenta haz clic en el siguiente botón:</p>
+        <a href="${verifyUrl}" style="padding:10px 20px; background:#22c55e; color:white; border-radius:5px; text-decoration:none;">Verificar correo</a>
+        <p>Si no creaste esta cuenta, ignora este mensaje.</p>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ message: "Correo de verificación enviado" });
+  } catch (error) {
+    console.error("Error enviando email:", error);
+    res.status(500).json({ error: "Error enviando correo de verificación" });
+  }
+};
+
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const payload = jwt.verify(token, jwtSecret);
+    const user = await User.findById(payload.id);
+    if (!user) return res.status(404).send("Usuario no encontrado");
+
+    if (user.isVerified) return res.send("Usuario ya está verificado");
+
+    user.isVerified = true;
+    await user.save();
+
+    res.redirect("http://localhost:5000/perfil?verified=true");
+  } catch (error) {
+    console.error("Error verificando email:", error);
+    res.status(400).send("Token inválido o expirado");
   }
 };

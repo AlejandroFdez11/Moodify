@@ -1,6 +1,8 @@
+const dotenv = require("dotenv")
+dotenv.config()
+
 const express = require("express")
 const cors = require("cors")
-const dotenv = require("dotenv")
 const mongoose = require("mongoose")
 
 //Importar los Routers de cada elemento
@@ -12,7 +14,7 @@ const artistaRoutes = require("./routes/artistaRoutes")
 const { authenticateSpotify } = require("./config/spotifyConfig")
 const path = require('path');
 
-dotenv.config()
+
 const app = express()
 
 app.use(express.json())

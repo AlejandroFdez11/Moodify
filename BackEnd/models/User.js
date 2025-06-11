@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema({
     fechaRegistro: {
     type: Date,
     default: Date.now,
+    },
+    isVerified: {
+    type: Boolean,
+    default: false,
   },
 })
 
