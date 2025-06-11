@@ -1,6 +1,6 @@
 const axios = require("axios");
 const { getSpotifyToken } = require("../config/spotifyConfig");
-const { spotifyApi, refreshToken } = require("../services/spotify");
+const { spotifyApi, refreshToken } = require("../services/spotify")
 
 exports.searchSpotifyPlaylists = async (req, res) => {
   const { query } = req.query;
@@ -116,6 +116,7 @@ exports.getSpotifyPlaylistById = async (req, res) => {
       tracks: data.tracks.items
         .filter(item => item && item.track)
         .map(item => ({
+          spotifyId: item.track.uri,
           titulo: item.track.name,
           artista: item.track.artists.map((a) => a.name).join(", "),
           imagen: item.track.album.images?.[0]?.url || null,
