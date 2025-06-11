@@ -97,7 +97,7 @@ const Navbar = () => {
           {authenticated ? (
             <>
               <Link to="/biblioteca" className="text-gray-300 hover:text-white hidden md:block">📚 Biblioteca</Link>
-              <Link to="/emocion" className="text-gray-300 hover:text-white hidden md:block">😄 Emocionometro</Link>
+              <Link to="/emociones" className="text-gray-300 hover:text-white hidden md:block">😄 Emocionometro</Link>
               
               {/* Imagen de perfil */}
               <button 

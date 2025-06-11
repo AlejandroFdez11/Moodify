@@ -68,7 +68,6 @@ const Buscador = () => {
       )}
 
       {/* PLAYLISTS */}
-      {/* PLAYLISTS */}
       {playlists.length > 0 && (
         <>
           <h2 className="text-2xl text-white mt-8 mb-2">Playlists</h2>
