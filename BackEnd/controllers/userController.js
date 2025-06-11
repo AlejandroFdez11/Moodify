@@ -140,7 +140,7 @@ exports.sendVerificationEmail = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '1h' });
-    const verifyUrl = `http://localhost:5000/verify-email/${token}`;
+    const verifyUrl = `http://localhost:5000/users/verify-email/${token}`;
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -174,7 +174,7 @@ exports.verifyEmail = async (req, res) => {
     user.isVerified = true;
     await user.save();
 
-    res.redirect("http://localhost:5000/perfil?verified=true");
+    res.redirect("http://localhost:5173/perfil?verified=true");
   } catch (error) {
     console.error("Error verificando email:", error);
     res.status(400).send("Token inválido o expirado");
