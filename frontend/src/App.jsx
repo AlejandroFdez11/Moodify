@@ -32,7 +32,9 @@ const App = () => {
           <Route path="/detalles/:id" element={<DetallesSong />} />
           <Route path='/playlist/:playlistId' element={<DetallesPlaylist/>}/>
           <Route path='/emociones' element={<Emociones/>}/>
+          <Route path='/emocion' element={<Emociones/>}/>
           <Route path="/emociones/:emocion" element={<ListadoEmocion />} />
+          <Route path="/emocion/:emocion" element={<ListadoEmocion />} />
           <Route path="/spotify/playlist/:id" element={<DetallesPlaylistSpotify />} />
 
 

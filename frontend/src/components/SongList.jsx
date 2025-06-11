@@ -9,7 +9,6 @@ const SongList = ({ songs }) => {
   const [selectedSong, setSelectedSong] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
-
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -24,61 +23,36 @@ const SongList = ({ songs }) => {
   }, [showModal]);
 
   const handleAddToPlaylist = async (playlistId, song) => {
-  console.log("Canción seleccionada:", song); // Para depuración
-  
-  if (!song) {
-    console.error("No se ha proporcionado ninguna canción.");
-    addNotification("Error: Canción no seleccionada.","error");
-    return;
-  }
+    if (!song) {
+      addNotification("Error: Canción no seleccionada.", "error");
+      return;
+    }
 
-  try {
-    const token = localStorage.getItem("token");
-    
-    // Extraer el ID real del URI si es necesario
-    const spotifyId = song.spotifyId.includes(':') 
-      ? song.spotifyId.split(':')[2] 
-      : song.spotifyId;
-
-    const payload = {
-      songId: spotifyId // Enviamos solo el ID limpio
-    };
-
-    console.log("Enviando payload:", payload);
-
-    const response = await axios.post(
-      `http://localhost:5000/playlists/${playlistId}/add-song`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    console.log("Respuesta del servidor:", response.data);
-    addNotification("Canción añadida correctamente a la playlist", "success");
-    setShowModal(false);
-    setSelectedSong(null);
-  } catch (error) {
-    console.error("Error completo:", error);
-    // Resto del código de manejo de errores...
-  }
-};
-
-  const handleAddToFavorites = async (song) => {
     try {
-      await axios.post(
-        "http://localhost:5000/favorites",
-        { songId: song._id },
+      const spotifyId = song.spotifyId.includes(":")
+        ? song.spotifyId.split(":")[2]
+        : song.spotifyId;
+
+      const payload = {
+        songId: spotifyId,
+      };
+
+      const response = await axios.post(
+        `http://localhost:5000/playlists/${playlistId}/add-song`,
+        payload,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-      alert("Canción añadida a favoritos.");
+
+      addNotification("Canción añadida correctamente a la playlist", "success");
+      setShowModal(false);
+      setSelectedSong(null);
     } catch (error) {
-      console.error("Error al añadir a favoritos:", error);
-      alert("No se pudo añadir a favoritos.");
+      console.error("Error al añadir canción:", error);
+      addNotification("Error al añadir la canción a la playlist", "error");
     }
   };
 
@@ -87,7 +61,7 @@ const SongList = ({ songs }) => {
     setNotifications((prev) => [...prev, { id, message, type }]);
   };
 
-   const removeNotification = (id) => {
+  const removeNotification = (id) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
@@ -146,15 +120,6 @@ const SongList = ({ songs }) => {
                     >
                       Añadir a Playlist
                     </button>
-                    <button
-                      className="block w-full px-4 py-2 text-left text-white hover:bg-gray-600"
-                      onClick={() => {
-                        handleAddToFavorites(song);
-                        setDropdownIndex(null);
-                      }}
-                    >
-                      Añadir a Favoritos
-                    </button>
                   </div>
                 )}
               </div>
@@ -181,7 +146,6 @@ const SongList = ({ songs }) => {
                     className="w-10 h-10 rounded-md object-cover"
                   />
                   <button
-                    key={playlist._id}
                     onClick={() =>
                       handleAddToPlaylist(playlist._id, selectedSong)
                     }

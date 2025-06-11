@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 import ArtistCard from "../components/ArtistCard";
-import SimplePlaylistCard from "../components/SimplePlaylistCard";
 import SongList from "../components/SongList";
 
 const emotionsMap = {
@@ -19,10 +18,9 @@ const ListadoEmocion = () => {
   const emotionData = emotionsMap[emocion];
 
   const [artists, setArtists] = useState([]);
-  const [albums, setAlbums] = useState([]);
-  const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [songs, setSongs] = useState([]);
 
   useEffect(() => {
     if (!emotionData) return;
@@ -34,32 +32,33 @@ const ListadoEmocion = () => {
       try {
         const genre = emotionData.genres[0];
 
-        // Petición para artistas
+        // 1. Obtener artistas filtrados por género
         const artistsRes = await axios.get("http://localhost:5000/artistas", {
           params: { genre },
         });
 
-        const fetchedArtists = artistsRes.data;
+        const fetchedArtists = artistsRes.data.map((a) => ({
+          id: a.id,
+          name: a.nombre,
+          imagen: a.imagen,
+          genero: a.genre || "Desconocido",
+        }));
+
         setArtists(fetchedArtists);
 
-        if (fetchedArtists.length > 0) {
-          const artistId = fetchedArtists[0].id;
+        const songsPorArtista = await Promise.all(
+          fetchedArtists.map(async (artist) => {
+            const res = await axios.get(
+              `http://localhost:5000/songs/songsArtist/${artist.id}`,
+              { params: { limit: 5 } }
+            );
 
-          // Álbumes del artista
-          const albumsRes = await axios.get(
-            `http://localhost:5000/artistas/${artistId}/albums`
-          );
-          setAlbums(albumsRes.data);
+            return res.data;
+          })
+        );
+        setSongs(songsPorArtista.flat());
 
-          // Canciones top del artista
-          const songsRes = await axios.get(
-            `http://localhost:5000/artistas/${artistId}/top-tracks`
-          );
-          setSongs(songsRes.data);
-        } else {
-          setAlbums([]);
-          setSongs([]);
-        }
+        setSongs(songsPorArtista.flat());
       } catch (err) {
         setError("Error al cargar datos de Spotify");
         console.error(err);
@@ -82,7 +81,8 @@ const ListadoEmocion = () => {
   return (
     <div className="p-6 text-white">
       <h1 className="text-3xl font-bold mb-6">
-        Emoción seleccionada: {emotionData.name}
+        Resultados para emoción:{" "}
+        <span className="text-green-400">{emotionData.name}</span>
       </h1>
 
       {loading && <p>Cargando datos de Spotify...</p>}
@@ -90,42 +90,22 @@ const ListadoEmocion = () => {
 
       {!loading && !error && (
         <>
-          <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4">Artistas relacionados</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {artists.map((artist) => (
-                <ArtistCard
-                  key={artist.id}
-                  artist={{
-                    name: artist.nombre,
-                    imagen: artist.imagen || "https://via.placeholder.com/300",
-                    genero: artist.genero || "Desconocido",
-                  }}
-                />
-              ))}
-            </div>
-          </section>
+          {/* ARTISTAS */}
+          {artists.length > 0 && (
+            <>
+              <h2 className="text-2xl text-white mb-2">Artistas</h2>
+              <div className="flex overflow-x-auto gap-4 pb-4">
+                {artists.map((artist) => (
+                  <div key={artist.id} className="flex-shrink-0 w-48">
+                    <ArtistCard artist={artist} />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
-          <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4">Álbumes destacados</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {albums.map((album) => (
-                <SimplePlaylistCard
-                  key={album.id}
-                  playlist={{
-                    _id: album.id,
-                    name: album.nombre,
-                    descripcion: album.descripcion || "Álbum de música",
-                    imagen: album.imagen || "https://via.placeholder.com/300",
-                  }}
-                />
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <SongList songs={songs} />
-          </section>
+          {/* CANCIONES */}
+          <SongList songs={songs} />
         </>
       )}
     </div>
