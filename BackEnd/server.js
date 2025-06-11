@@ -8,6 +8,7 @@ const userRoutes = require("./routes/userRoutes")
 const songRoutes = require("./routes/songRoutes")
 const playlistRoutes = require("./routes/playlistRoutes")
 const spotifyRouter = require ("./routes/spotifyRouter")
+const artistaRoutes = require("./routes/artistaRoutes")
 const { authenticateSpotify } = require("./config/spotifyConfig")
 const path = require('path');
 
@@ -29,6 +30,7 @@ app.use("/users",userRoutes)
 app.use("/songs",songRoutes)
 app.use("/playlists",playlistRoutes)
 app.use("/spotify",spotifyRouter)
+app.use("/artistas",artistaRoutes)
 
 
 //Autentificación con Spotify
