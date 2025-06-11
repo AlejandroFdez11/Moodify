@@ -25,7 +25,11 @@ const userSchema = new mongoose.Schema({
     },
     playlists:[{
         type: mongoose.Schema.Types.ObjectId, ref: "Playlist"
-    }]
+    }],
+    fechaRegistro: {
+    type: Date,
+    default: Date.now,
+  },
 })
 
 module.exports = mongoose.model("User",userSchema)

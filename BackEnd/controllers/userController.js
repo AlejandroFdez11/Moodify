@@ -3,23 +3,45 @@ const bcrypt = require ("bcryptjs")
 const jwt = require ("jsonwebtoken")
 const upload = require("../middlewares/uploadImagen")
 
-exports.registerUser = async (req,res)=>{
-    const {name, email, password} = req.body
+exports.registerUser = async (req, res) => {
+  const { name, email, password } = req.body;
 
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({
-          name,
-          email,
-          password: hashedPassword,
-          imagenPerfil: req.file ? req.protocol + "://" + req.get("host") + "/uploads/" + req.file.filename : "",  // Si hay imagen, se guarda la URL
-        });
-        await newUser.save();
-        res.status(201).json({ message: "Usuario creado exitosamente" });
-    } catch (error) {
-        res.status(400).json({error: error.message})
+  try {
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "Todos los campos son obligatorios" });
     }
-}
+
+    // Comprobar si email ya existe
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "El email ya está registrado" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      imagenPerfil: req.file
+        ? req.protocol + "://" + req.get("host") + "/uploads/" + req.file.filename
+        : "",
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: "Usuario creado exitosamente" });
+  } catch (error) {
+    console.error("Error en registro:", error);
+
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((val) => val.message);
+      return res.status(400).json({ error: messages.join(", ") });
+    }
+
+    res.status(500).json({ error: "Error del servidor, intenta nuevamente" });
+  }
+};
 
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
