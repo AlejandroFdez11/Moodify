@@ -96,7 +96,7 @@ exports.updateProfileImage = async (req, res) => {
 
     let finalImageUrl;
     if (req.file) {
-      finalImageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+      finalImageUrl = `https://moodify-wf1j.onrender.com/uploads/${req.file.filename}`;
     } else if (imageUrl) {
       try {
         new URL(imageUrl);
@@ -140,7 +140,7 @@ exports.sendVerificationEmail = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '1h' });
-    const verifyUrl = `http://localhost:5000/users/verify-email/${token}`;
+    const verifyUrl = `https://moodify-wf1j.onrender.com/users/verify-email/${token}`;
 
     const mailOptions = {
       from: process.env.EMAIL_USER,

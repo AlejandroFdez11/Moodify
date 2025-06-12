@@ -10,7 +10,7 @@ exports.createPlaylist = async (req, res) => {
 
     let finalImagePath = imagen;
     if (req.file) {
-      finalImagePath = `http://localhost:5000/uploads/playlists/${req.file.filename}`;
+      finalImagePath = `https://moodify-wf1j.onrender.com/uploads/playlists/${req.file.filename}`;
     }
 
     if (!name || !finalImagePath) {
