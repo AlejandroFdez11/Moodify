@@ -6,6 +6,9 @@ let spotifyAccessToken = "";
 let tokenExpiresAt = 0;
 
 const authenticateSpotify = async () => {
+  console.log("Client ID definido?", !!process.env.SPOTIFY_CLIENT_ID);
+  console.log("Client Secret definido?", !!process.env.SPOTIFY_CLIENT_SECRET);
+
   try {
     const response = await axios.post(
       "https://accounts.spotify.com/api/token",
@@ -18,7 +21,7 @@ const authenticateSpotify = async () => {
           Authorization:
             "Basic " +
             Buffer.from(
-              `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+              `${process.env.SPOTIFY_CLIENT_ID.trim()}:${process.env.SPOTIFY_CLIENT_SECRET.trim()}`
             ).toString("base64"),
         },
       }
@@ -29,11 +32,11 @@ const authenticateSpotify = async () => {
     console.log("✅ Token de Spotify renovado");
   } catch (error) {
     console.error("❌ Error autenticando con Spotify:", error.response?.data || error.message);
+    throw error;
   }
 };
 
 const getSpotifyToken = async () => {
-  // Si no hay token o expiró, renovamos
   if (!spotifyAccessToken || Date.now() >= tokenExpiresAt) {
     await authenticateSpotify();
   }
