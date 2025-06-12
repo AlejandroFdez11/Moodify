@@ -23,7 +23,7 @@ const Navbar = () => {
     }
 
     try {
-      const response = await axios.get("http://localhost:5000/users/getUser", {
+      const response = await axios.get("https://moodify-wf1j.onrender.com/users/getUser", {
         headers: { Authorization: `Bearer ${token}` },
       });
 

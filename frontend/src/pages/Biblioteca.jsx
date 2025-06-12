@@ -31,7 +31,7 @@ const Biblioteca = () => {
     }
 
     axios
-      .get("http://localhost:5000/playlists/me", {
+      .get("https://moodify-wf1j.onrender.com/playlists/me", {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(res => {
@@ -89,14 +89,14 @@ const Biblioteca = () => {
         throw new Error("No se encontró el token de autenticación.");
       }
   
-      const res = await axios.post("http://localhost:5000/playlists", data, {
+      const res = await axios.post("https://moodify-wf1j.onrender.com/playlists", data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data"
         }
       });
   
-      const updated = await axios.get("http://localhost:5000/playlists/me", {
+      const updated = await axios.get("https://moodify-wf1j.onrender.com/playlists/me", {
         headers: { Authorization: `Bearer ${token}` }
       });
   

@@ -6,8 +6,16 @@ const spotifyApi = new SpotifyWebApi({
 });
 
 const refreshToken = async () => {
-  const data = await spotifyApi.clientCredentialsGrant();
-  spotifyApi.setAccessToken(data.body.access_token);
+  try {
+    const data = await spotifyApi.clientCredentialsGrant();
+    const token = data.body.access_token;
+    console.log("Nuevo token recibido:", token.slice(0, 20), "...");
+
+    spotifyApi.setAccessToken(token);
+  } catch (err) {
+    console.error("Error al obtener token de Spotify:", err.message);
+    throw err;
+  }
 };
 
 module.exports = { spotifyApi, refreshToken };

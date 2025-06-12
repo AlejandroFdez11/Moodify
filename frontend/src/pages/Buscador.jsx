@@ -18,13 +18,13 @@ const Buscador = () => {
     const fetchAll = async () => {
       try {
         const [songsRes, artistsRes, playlistsRes] = await Promise.all([
-          axios.get("http://localhost:5000/spotify/songs", {
+          axios.get("https://moodify-wf1j.onrender.com/spotify/songs", {
             params: { query },
           }),
-          axios.get("http://localhost:5000/spotify/artists", {
+          axios.get("https://moodify-wf1j.onrender.com/spotify/artists", {
             params: { query },
           }),
-          axios.get("http://localhost:5000/spotify/playlists", {
+          axios.get("https://moodify-wf1j.onrender.com/spotify/playlists", {
             params: { query },
           }),
         ]);

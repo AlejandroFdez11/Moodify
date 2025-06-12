@@ -23,7 +23,7 @@ const Perfil = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          "http://localhost:5000/users/getUser",
+          "https://moodify-wf1j.onrender.com/users/getUser",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -53,7 +53,7 @@ const Perfil = () => {
     const fetchPlaylists = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/playlists/me", {
+        const res = await axios.get("https://moodify-wf1j.onrender.com/playlists/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -111,7 +111,7 @@ const Perfil = () => {
       }
 
       const response = await axios.post(
-        "http://localhost:5000/users/update-profile-image",
+        "https://moodify-wf1j.onrender.com/users/update-profile-image",
         formData,
         {
           headers: {
@@ -170,7 +170,7 @@ const Perfil = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:5000/users/send-verification-email",
+        "https://moodify-wf1j.onrender.com/users/send-verification-email",
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

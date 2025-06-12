@@ -14,7 +14,7 @@ const SongList = ({ songs }) => {
   useEffect(() => {
     if (showModal) {
       axios
-        .get("http://localhost:5000/playlists/me", {
+        .get("https://moodify-wf1j.onrender.com/playlists/me", {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => setPlaylists(res.data))
@@ -38,7 +38,7 @@ const SongList = ({ songs }) => {
       };
 
       const response = await axios.post(
-        `http://localhost:5000/playlists/${playlistId}/add-song`,
+        `https://moodify-wf1j.onrender.com/playlists/${playlistId}/add-song`,
         payload,
         {
           headers: {

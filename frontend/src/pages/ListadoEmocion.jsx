@@ -24,7 +24,7 @@ const ListadoEmocion = () => {
 
       try {
         // 1. Obtener artistas filtrados por género
-        const artistsRes = await axios.get("http://localhost:5000/artistas", {
+        const artistsRes = await axios.get("https://moodify-wf1j.onrender.com/artistas", {
           params: { genre },
         });
 
@@ -41,7 +41,7 @@ const ListadoEmocion = () => {
         const songsPorArtista = await Promise.all(
           fetchedArtists.map(async (artist) => {
             const res = await axios.get(
-              `http://localhost:5000/songs/songsArtist/${artist.id}`,
+              `https://moodify-wf1j.onrender.com/songs/songsArtist/${artist.id}`,
               { params: { limit: 5 } }
             );
             return res.data;

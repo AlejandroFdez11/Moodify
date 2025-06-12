@@ -11,7 +11,7 @@ const DetallesPlaylistSpotify = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/spotify/playlists/${id}`);
+        const res = await axios.get(`https://moodify-wf1j.onrender.com/spotify/playlists/${id}`);
         setPlaylist(res.data);
 
         // Formatear canciones asegurando que tengan un 'spotifyId'

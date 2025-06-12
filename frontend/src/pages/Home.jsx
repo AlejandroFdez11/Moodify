@@ -18,7 +18,7 @@ const Home = () => {
   // Cargar usuario
   useEffect(() => {
     axios
-      .get("http://localhost:5000/users/getUser", {
+      .get("https://moodify-wf1j.onrender.com/users/getUser", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       })
       .then((res) => setUser(res.data))
@@ -29,7 +29,7 @@ const Home = () => {
   // Cargar artistas populares por género (reggaeton)
   useEffect(() => {
     axios
-      .get("http://localhost:5000/artistas?genre=reggaeton")
+      .get("https://moodify-wf1j.onrender.com/artistas?genre=reggaeton")
       .then((res) => {
         setArtists(res.data);
         if (res.data.length > 0) {
@@ -44,7 +44,7 @@ const Home = () => {
   // Cargar playlists recientes
   useEffect(() => {
     axios
-      .get("http://localhost:5000/playlists")
+      .get("https://moodify-wf1j.onrender.com/playlists")
       .then((res) => setPlaylists(res.data))
       .catch(() => setPlaylists([]))
       .finally(() => setLoading((l) => ({ ...l, playlists: false })));

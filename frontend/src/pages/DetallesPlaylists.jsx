@@ -15,10 +15,10 @@ const DetallesPlaylist = () => {
     const fetchData = async () => {
       try {
         const playlistRes = await axios.get(
-          `http://localhost:5000/playlists/${playlistId}`
+          `https://moodify-wf1j.onrender.com/playlists/${playlistId}`
         );
         const songsRes = await axios.get(
-          `http://localhost:5000/playlists/${playlistId}/songs`
+          `https://moodify-wf1j.onrender.com/playlists/${playlistId}/songs`
         );
         setPlaylist(playlistRes.data);
         setSongs(songsRes.data);
@@ -41,7 +41,7 @@ const DetallesPlaylist = () => {
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/playlists/${playlistId}`, {
+      await axios.delete(`https://moodify-wf1j.onrender.com/playlists/${playlistId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -66,7 +66,7 @@ const DetallesPlaylist = () => {
   try {
     const token = localStorage.getItem("token");
     await axios.delete(
-      `http://localhost:5000/playlists/${playlistId}/song/${songId}`,
+      `https://moodify-wf1j.onrender.com/playlists/${playlistId}/song/${songId}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }

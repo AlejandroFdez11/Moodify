@@ -5,7 +5,7 @@ const Playlists = () => {
   const [playlists, setPlaylists] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/playlists")
+    axios.get("https://moodify-wf1j.onrender.com/playlists")
       .then(res => setPlaylists(res.data))
       .catch(err => console.error(err));
   }, []);
