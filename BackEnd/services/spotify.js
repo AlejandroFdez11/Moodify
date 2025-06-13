@@ -9,7 +9,6 @@ const refreshToken = async () => {
   try {
     const data = await spotifyApi.clientCredentialsGrant();
     const token = data.body.access_token;
-    console.log("Nuevo token recibido:", token.slice(0, 20), "...");
 
     spotifyApi.setAccessToken(token);
   } catch (err) {
