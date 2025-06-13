@@ -25,8 +25,8 @@ exports.registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       imagenPerfil: req.file
-        ? req.protocol + "://" + req.get("host") + "/uploads/" + req.file.filename
-        : "",
+            ? `${req.BASE_URL}/uploads/${req.file.filename}`
+            : "",
     });
 
     await newUser.save();
@@ -79,7 +79,7 @@ exports.getUser = async (req, res) => {
 // Actualizar imagen de perfil
 exports.updateProfileImage = async (req, res) => {
   const token = req.body.token;
-  const imageUrl = req.body.imageUrl;
+  const { imageUrl: imageUrlFromBody } = req.body;
 
   if (!req.file && !imageUrl) {
     return res.status(400).json({ error: 'No se ha proporcionado una imagen o URL' });
@@ -96,11 +96,11 @@ exports.updateProfileImage = async (req, res) => {
 
     let finalImageUrl;
     if (req.file) {
-      finalImageUrl = `https://moodify-wf1j.onrender.com/uploads/${req.file.filename}`;
-    } else if (imageUrl) {
+      finalImageUrl = `${req.BASE_URL}/uploads/${req.file.filename}`;
+    } else if (imageUrlFromBody) {
       try {
-        new URL(imageUrl);
-        finalImageUrl = imageUrl;
+        new URL(imageUrlFromBody);
+        finalImageUrl = imageUrlFromBody;
       } catch (error) {
         return res.status(400).json({ error: 'URL de imagen inválida' });
       }

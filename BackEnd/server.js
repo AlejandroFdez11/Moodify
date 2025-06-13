@@ -1,6 +1,10 @@
 const dotenv = require("dotenv")
 dotenv.config()
 
+const BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://moodify-wf1j.onrender.com' 
+  : `http://localhost:${process.env.PORT || 5000}`;
+
 const express = require("express")
 const cors = require("cors")
 const mongoose = require("mongoose")
@@ -16,6 +20,12 @@ const path = require('path');
 
 
 const app = express()
+
+// Middleware para agregar BASE_URL a todas las solicitudes
+app.use((req, res, next) => {
+  req.BASE_URL = BASE_URL;
+  next();
+});
 
 app.use(express.json())
 app.use(cors())
