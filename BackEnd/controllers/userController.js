@@ -78,44 +78,53 @@ exports.getUser = async (req, res) => {
 
 // Actualizar imagen de perfil
 exports.updateProfileImage = async (req, res) => {
-  const token = req.body.token;
-  const { imageUrl: imageUrlFromBody } = req.body;
-
-  if (!req.file && !imageUrl) {
-    return res.status(400).json({ error: 'No se ha proporcionado una imagen o URL' });
+  // 1. Obtener token de los headers
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) {
+    return res.status(401).json({ error: 'Token no proporcionado' });
+  }
+  
+  const token = authHeader.split(' ')[1];
+  
+  // 2. Manejar solo la imagen subida (eliminar lógica de URL)
+  if (!req.file) {
+    return res.status(400).json({ error: 'No se ha proporcionado una imagen válida' });
   }
 
   try {
+    // 3. Verificar token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
+    // 4. Buscar usuario
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    let finalImageUrl;
-    if (req.file) {
-      finalImageUrl = `${req.BASE_URL}/uploads/${req.file.filename}`;
-    } else if (imageUrlFromBody) {
-      try {
-        new URL(imageUrlFromBody);
-        finalImageUrl = imageUrlFromBody;
-      } catch (error) {
-        return res.status(400).json({ error: 'URL de imagen inválida' });
-      }
-    }
-
+    // 5. Actualizar imagen
+    const finalImageUrl = `${req.BASE_URL}/uploads/${req.file.filename}`;
     user.imagenPerfil = finalImageUrl;
     await user.save();
 
+    // 6. Responder con la nueva URL
     res.status(200).json({ 
       message: 'Imagen de perfil actualizada', 
       imagenPerfil: finalImageUrl 
     });
+    
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Hubo un error al actualizar la imagen de perfil' });
+    console.error('Error en updateProfileImage:', error);
+    
+    // Manejar errores específicos de JWT
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expirado' });
+    }
+    
+    res.status(500).json({ error: 'Error al actualizar la imagen de perfil' });
   }
 };
 
