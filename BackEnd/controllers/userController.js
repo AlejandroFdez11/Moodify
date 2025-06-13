@@ -174,7 +174,7 @@ exports.verifyEmail = async (req, res) => {
     user.isVerified = true;
     await user.save();
 
-    res.redirect("http://localhost:5173/perfil?verified=true");
+    res.redirect("https://moodify-wf1j.onrender.com/perfil");
   } catch (error) {
     console.error("Error verificando email:", error);
     res.status(400).send("Token inválido o expirado");
