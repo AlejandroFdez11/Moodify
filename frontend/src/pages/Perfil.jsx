@@ -401,7 +401,7 @@ const Perfil = () => {
               Fecha de registro
             </h3>
             <p className="text-lg">
-              {new Date(user.createdAt).toLocaleDateString()}
+              {new Date(user.fechaRegistro).toLocaleDateString()}
             </p>
           </div>
         </div>
