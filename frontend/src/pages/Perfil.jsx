@@ -41,7 +41,6 @@ const Perfil = () => {
       } catch (error) {
         console.error("Error al cargar datos del usuario:", error);
 
-        // Si hay error (token inválido, etc.), redirigir a login
         if (error.response?.status === 401) {
           logout();
           navigate("/login");
@@ -134,6 +133,10 @@ const Perfil = () => {
         type: "success",
       });
 
+      setTimeout(() => {
+        window.location.href = "https://moodify-2tjk.vercel.app/";
+      }, 1500);
+
     } catch (error) {
       console.error("Error en subida:", error);
 
@@ -153,7 +156,7 @@ const Perfil = () => {
     } finally {
       setIsLoading(false);
       setShowUploadModal(false);
-      setSelectedFile(null); // Solo limpiar el archivo seleccionado
+      setSelectedFile(null);
     }
   };
 
