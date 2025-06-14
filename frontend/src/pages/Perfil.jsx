@@ -10,8 +10,6 @@ const Perfil = () => {
   const [user, setUser] = useState(null);
   const [playlists, setPlaylists] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [imageOption, setImageOption] = useState("url");
-  const [imageUrl, setImageUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState(null);
@@ -92,53 +90,71 @@ const Perfil = () => {
     setIsLoading(true);
     const token = localStorage.getItem("token");
 
+    if (!selectedFile) {
+      setNotification({
+        message: "Por favor selecciona una imagen",
+        type: "error",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const formData = new FormData();
-
-      if (!selectedFile) {
-        setNotification({
-          message: "Por favor selecciona una imagen",
-          type: "error",
-        });
-        setIsLoading(false);
-        return;
-      }
-
       formData.append("image", selectedFile);
 
+      // Añadir timeout y parámetro único para evitar caché
       const response = await axios.post(
-        "https://moodify-wf1j.onrender.com/users/update-profile-image",
+        `https://moodify-wf1j.onrender.com/users/update-profile-image?t=${Date.now()}`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
+          timeout: 25000, // 25 segundos timeout
         }
       );
 
-      // Actualizar estado y localStorage
+      // Actualizar estado sin recargar toda la página
       const updatedUser = {
         ...user,
         imagenPerfil: response.data.imagenPerfil,
       };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
-      window.dispatchEvent(new Event("imageUpdated"));
 
-      // Recargar para actualizar navbar
-      window.location.reload();
-    } catch (error) {
-      console.error("Error al actualizar la imagen:", error);
+      // Emitir evento para actualizar navbar
+      window.dispatchEvent(
+        new CustomEvent("imageUpdated", {
+          detail: response.data.imagenPerfil,
+        })
+      );
+
       setNotification({
-        message: error.response?.data?.error || "Error al actualizar la imagen",
+        message: "¡Imagen actualizada con éxito!",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error en subida:", error);
+
+      let errorMessage = "Error al actualizar la imagen";
+
+      if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
+        errorMessage =
+          "Tiempo de espera agotado. Intenta con una imagen más pequeña";
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+
+      setNotification({
+        message: errorMessage,
         type: "error",
       });
     } finally {
       setIsLoading(false);
       setShowUploadModal(false);
-      setImageUrl("");
-      setSelectedFile(null);
+      setSelectedFile(null); // Solo limpiar el archivo seleccionado
     }
   };
 
@@ -209,10 +225,13 @@ const Perfil = () => {
               <div className="mb-4">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg, image/png, image/jpg"
                   onChange={handleFileChange}
                   className="w-full p-3 bg-gray-700 rounded"
                 />
+                <p className="text-xs text-gray-400 mt-2">
+                  Formatos soportados: JPEG, PNG (Máx. 3MB)
+                </p>
                 {selectedFile && (
                   <div className="mt-2 text-sm text-green-400">
                     Archivo seleccionado: {selectedFile.name}
@@ -233,7 +252,14 @@ const Perfil = () => {
                   disabled={isLoading}
                   className="px-4 py-2 bg-green-600 rounded hover:bg-green-500 disabled:opacity-50"
                 >
-                  {isLoading ? "Guardando..." : "Guardar Cambios"}
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <ClipLoader color="#ffffff" size={20} className="mr-2" />
+                      Guardando...
+                    </div>
+                  ) : (
+                    "Guardar Cambios"
+                  )}
                 </button>
               </div>
             </form>

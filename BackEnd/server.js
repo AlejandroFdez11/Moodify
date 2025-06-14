@@ -8,20 +8,27 @@ const BASE_URL = process.env.NODE_ENV === 'production'
 const express = require("express")
 const cors = require("cors")
 const mongoose = require("mongoose")
+const fs = require('fs');
+const path = require('path');
 
-//Importar los Routers de cada elemento
+// 1. Crear carpeta uploads si no existe
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('📁 Carpeta uploads creada exitosamente');
+}
+
+// Importar routers
 const userRoutes = require("./routes/userRoutes")
 const songRoutes = require("./routes/songRoutes")
 const playlistRoutes = require("./routes/playlistRoutes")
 const spotifyRouter = require ("./routes/spotifyRouter")
 const artistaRoutes = require("./routes/artistaRoutes")
 const { authenticateSpotify } = require("./config/spotifyConfig")
-const path = require('path');
-
 
 const app = express()
 
-//Agrega CORS específico
+// Configuración CORS
 const corsOptions = {
   origin: ['http://localhost:5173', 'https://moodify-2tjk.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE','OPTIONS'],
@@ -33,29 +40,30 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json())
 
-// Middleware para agregar BASE_URL a todas las solicitudes
+// Middleware para BASE_URL
 app.use((req, res, next) => {
   req.BASE_URL = BASE_URL;
   next();
 });
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Servir archivos estáticos DESPUÉS de crear la carpeta
+app.use('/uploads', express.static(uploadsDir));
 
-//Conexion a MongoDB
+// Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URL)
-.then(()=>console.log("MongoDB conectado"))
-.catch(e => console.log(e))
+.then(() => console.log("✅ MongoDB conectado"))
+.catch(e => console.error("❌ Error MongoDB:", e))
 
-//Rutas de la API
-app.use("/users",userRoutes)
-app.use("/songs",songRoutes)
-app.use("/playlists",playlistRoutes)
-app.use("/spotify",spotifyRouter)
-app.use("/artistas",artistaRoutes)
+// Rutas
+app.use("/users", userRoutes)
+app.use("/songs", songRoutes)
+app.use("/playlists", playlistRoutes)
+app.use("/spotify", spotifyRouter)
+app.use("/artistas", artistaRoutes)
 
-
-//Autentificación con Spotify
+// Autenticación Spotify
 authenticateSpotify()
 
+// Iniciar servidor
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`));

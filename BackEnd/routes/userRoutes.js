@@ -17,8 +17,16 @@ router.post(
   (req, res, next) => {
     upload(req, res, (err) => {
       if (err) {
-        return res.status(400).json({ error: err.message });
+        console.error('Multer error:', err);
+        return res.status(400).json({ 
+          error: err.message || 'Error al procesar la imagen' 
+        });
       }
+      
+      if (!req.file) {
+        return res.status(400).json({ error: 'No se proporcionó imagen válida' });
+      }
+      
       next();
     });
   },

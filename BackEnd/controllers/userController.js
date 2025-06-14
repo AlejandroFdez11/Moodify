@@ -116,8 +116,9 @@ exports.updateProfileImage = async (req, res) => {
 
     // 7. Responder
     res.status(200).json({ 
-      message: 'Imagen de perfil actualizada', 
-      imagenPerfil: finalImageUrl 
+      message: 'Imagen actualizada',
+      imagenPerfil: finalImageUrl,
+      filename: req.file.filename
     });
     
   } catch (error) {
