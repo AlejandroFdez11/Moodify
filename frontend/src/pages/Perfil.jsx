@@ -193,7 +193,11 @@ const Perfil = () => {
         type: "success",
       });
       setTimeout(() => {
-        window.location.reload();
+        window.dispatchEvent(
+          new CustomEvent("imageUpdated", {
+            detail: response.data.imagenPerfil,
+          })
+        );
       }, 1500);
     } catch (error) {
       setNotification({

@@ -36,6 +36,10 @@ const corsOptions = {
   credentials: true
 };
 
+app.get(['/perfil', '/biblioteca', '/login'], (req, res) => {
+  res.redirect('https://moodify-2tjk.vercel.app/');
+});
+
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json())
