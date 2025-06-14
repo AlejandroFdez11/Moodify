@@ -112,11 +112,10 @@ const Perfil = () => {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-          timeout: 25000, // 25 segundos timeout
+          timeout: 25000,
         }
       );
 
-      // Actualizar estado sin recargar toda la página
       const updatedUser = {
         ...user,
         imagenPerfil: response.data.imagenPerfil,
@@ -135,6 +134,11 @@ const Perfil = () => {
         message: "¡Imagen actualizada con éxito!",
         type: "success",
       });
+
+      setTimeout(() => {
+        navigate("/");
+      },1500);
+
     } catch (error) {
       console.error("Error en subida:", error);
 
