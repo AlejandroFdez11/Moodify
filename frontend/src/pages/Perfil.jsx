@@ -81,7 +81,6 @@ const Perfil = () => {
   const handleLogout = () => {
     logout();
     navigate("/login");
-    window.location.reload();
   };
 
   // Manejar cambio de imagen de perfil
@@ -134,10 +133,6 @@ const Perfil = () => {
         message: "¡Imagen actualizada con éxito!",
         type: "success",
       });
-
-      setTimeout(() => {
-        navigate("/");
-      },1500);
 
     } catch (error) {
       console.error("Error en subida:", error);

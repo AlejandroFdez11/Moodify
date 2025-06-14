@@ -91,7 +91,7 @@ const Navbar = () => {
     logout();
     setAuthenticated(false);
     setUserImage(defaultImage);
-    navigate("/login");
+    navigate("/");
   };
 
   const handleSearch = (e) => {
