@@ -78,7 +78,7 @@ exports.getUser = async (req, res) => {
 
 // Actualizar imagen de perfil
 exports.updateProfileImage = async (req, res) => {
-  // 1. Obtener token de los headers
+  // 1. Obtener token de headers
   const authHeader = req.headers['authorization'];
   if (!authHeader) {
     return res.status(401).json({ error: 'Token no proporcionado' });
@@ -86,28 +86,31 @@ exports.updateProfileImage = async (req, res) => {
   
   const token = authHeader.split(' ')[1];
   
-  // 2. Manejar solo la imagen subida (eliminar lógica de URL)
-  if (!req.file) {
-    return res.status(400).json({ error: 'No se ha proporcionado una imagen válida' });
-  }
-
   try {
-    // 3. Verificar token
+    // 2. Verificar token PRIMERO
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
-    // 4. Buscar usuario
+    // 3. Buscar usuario
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    // 5. Actualizar imagen
-    const finalImageUrl = `${req.BASE_URL}/uploads/${req.file.filename}`;
+    // 4. Verificar imagen DESPUÉS del token
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se ha proporcionado una imagen válida' });
+    }
+
+    // 5. Construir URL con fallback
+    const baseUrl = req.BASE_URL || 'https://moodify-wf1j.onrender.com';
+    const finalImageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+    
+    // 6. Actualizar imagen
     user.imagenPerfil = finalImageUrl;
     await user.save();
 
-    // 6. Responder con la nueva URL
+    // 7. Responder
     res.status(200).json({ 
       message: 'Imagen de perfil actualizada', 
       imagenPerfil: finalImageUrl 

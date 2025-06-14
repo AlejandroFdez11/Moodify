@@ -100,7 +100,7 @@ const Perfil = () => {
           return;
         }
       } else if (imageOption === "file" && selectedFile) {
-        formData.append("imagen", selectedFile);
+        formData.append("image", selectedFile);
       } else {
         setNotification({
           message: "Por favor selecciona una imagen",
@@ -116,6 +116,7 @@ const Perfil = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}`
           },
         }
       );

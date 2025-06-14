@@ -31,13 +31,13 @@ app.use(express.json())
 
 //Agrega CORS específico
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://moodify-2tjk.vercel.app/'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: ['http://localhost:5173', 'https://moodify-2tjk.vercel.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 };
 
-app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/uploads", express.static("uploads"));
 
