@@ -21,14 +21,6 @@ const path = require('path');
 
 const app = express()
 
-// Middleware para agregar BASE_URL a todas las solicitudes
-app.use((req, res, next) => {
-  req.BASE_URL = BASE_URL;
-  next();
-});
-
-app.use(express.json())
-
 //Agrega CORS específico
 const corsOptions = {
   origin: ['http://localhost:5173', 'https://moodify-2tjk.vercel.app'],
@@ -37,7 +29,16 @@ const corsOptions = {
   credentials: true
 };
 
+app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+app.use(express.json())
+
+// Middleware para agregar BASE_URL a todas las solicitudes
+app.use((req, res, next) => {
+  req.BASE_URL = BASE_URL;
+  next();
+});
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/uploads", express.static("uploads"));
 

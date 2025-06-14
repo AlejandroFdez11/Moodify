@@ -22,6 +22,12 @@ const Perfil = () => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("token");
+
+        if (!token) {
+          logout();
+          navigate("/login");
+          return;
+        }
         const response = await axios.get(
           "https://moodify-wf1j.onrender.com/users/getUser",
           {
@@ -53,11 +59,14 @@ const Perfil = () => {
     const fetchPlaylists = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("https://moodify-wf1j.onrender.com/playlists/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await axios.get(
+          "https://moodify-wf1j.onrender.com/playlists/me",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setPlaylists(res.data);
       } catch (error) {
         console.error("Error al cargar playlists:", error);
@@ -116,7 +125,7 @@ const Perfil = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
         }
       );
