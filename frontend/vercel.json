@@ -1,12 +1,9 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/perfil",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/.*",
+      "dest": "/index.html",
+      "status": 200
     }
   ]
 }

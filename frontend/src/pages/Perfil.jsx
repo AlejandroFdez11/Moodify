@@ -134,7 +134,7 @@ const Perfil = () => {
       });
 
       setTimeout(() => {
-        window.location.href = "https://moodify-2tjk.vercel.app/";
+        navigate("/");
       }, 1500);
 
     } catch (error) {
