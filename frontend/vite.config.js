@@ -11,16 +11,12 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     rollupOptions: {
-      input: {
-        main: './index.html'
-      }
+      input: './index.html'
     }
   },
   server: {
-    historyApiFallback: {
-      rewrites: [
-        { from: /./, to: '/index.html' }
-      ]
-    }
+    host: true,
+    strictPort: true,
+    port: 5173
   }
 })
