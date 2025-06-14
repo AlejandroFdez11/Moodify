@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/icono.png" />
+    <link rel="icon" type="image/png" href="icono.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Moodify</title>
   </head>
@@ -10,5 +10,15 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    
+    <!-- Script para manejar rutas en Vercel -->
+    <script>
+      // Solución para el error 404 en Vercel
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      if (pathSegments.length > 0 && !pathSegments.includes('index.html')) {
+        const newPath = window.location.origin + '/#' + window.location.pathname;
+        window.location.replace(newPath);
+      }
+    </script>
   </body>
 </html>
