@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { logout } from "../services/Auth";
@@ -12,6 +12,9 @@ const Navbar = () => {
   const [imageLoading, setImageLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  
+  const mobileMenuRef = useRef(null);
+  const userMenuRef = useRef(null);
 
   const defaultImage =
     "https://imgs.search.brave.com/gpitD9caAmK6KPyVZsIQkKR2nUHUkAPNRSN-vzKvuEw/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/dmVjdG9yLXByZW1p/dW0vaWNvbm8tbWVt/YnJlc2lhLXBsYXRl/YWRvLWljb25vLXBl/cmZpbC1hdmF0YXIt/ZGVmZWN0by1pY29u/by1taWVtYnJvcy1p/bWFnZW4tdXN1YXJp/by1yZWRlcy1zb2Np/YWxlcy1pbHVzdHJh/Y2lvbi12ZWN0b3Jp/YWxfNTYxMTU4LTQx/OTUuanBnP3NlbXQ9/YWlzX2h5YnJpZCZ3/PTc0MA";
@@ -109,54 +112,81 @@ const Navbar = () => {
 
   // Cerrar menús cuando se hace clic fuera de ellos
   useEffect(() => {
-    const closeMenus = () => {
-      setMobileMenuOpen(false);
-      setUserMenuOpen(false);
+    const handleClickOutside = (event) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setMobileMenuOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
       setSearchSuggestions([]);
     };
-    
-    window.addEventListener("click", closeMenus);
-    return () => window.removeEventListener("click", closeMenus);
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   return (
-    <nav className="bg-gray-900 p-4 shadow-lg sticky top-0 z-50">
-      <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        {/* Primera fila: Logo y controles móviles */}
-        <div className="w-full flex justify-between items-center md:w-auto">
-          <Link to="/" className="text-white text-2xl font-bold">Moodify</Link>
+    <nav className="bg-gray-900 p-3 sm:p-4 shadow-lg sticky top-0 z-50">
+      <div className="container mx-auto flex flex-wrap items-center justify-between">
+        {/* Logo y controles móviles */}
+        <div className="flex items-center justify-between w-full md:w-auto">
+          <Link to="/" className="text-white text-xl sm:text-2xl font-bold">Moodify</Link>
           
           {/* Botones de menú móvil */}
-          <div className="flex md:hidden gap-3">
+          <div className="flex md:hidden gap-3 items-center">
             {authenticated ? (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setUserMenuOpen(!userMenuOpen);
-                  setMobileMenuOpen(false);
-                }}
-                className="w-10 h-10 rounded-full border-2 border-gray-300 overflow-hidden relative"
-              >
-                {imageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                    <div className="w-4 h-4 border-t-2 border-green-500 rounded-full animate-spin"></div>
+              <div ref={userMenuRef} className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUserMenuOpen(!userMenuOpen);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-gray-300 overflow-hidden relative"
+                >
+                  {imageLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-green-500 rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                  <img
+                    src={userImage || defaultImage}
+                    alt="Perfil"
+                    className={`w-full h-full object-cover ${imageLoading ? 'invisible' : 'visible'}`}
+                    onLoad={() => setImageLoading(false)}
+                    onError={(e) => {
+                      if (e.target.src !== defaultImage) {
+                        e.target.src = defaultImage;
+                      }
+                      setImageLoading(false);
+                    }}
+                  />
+                </button>
+                
+                {/* Menú de usuario móvil */}
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50">
+                    <Link
+                      to="/perfil"
+                      className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      Mi perfil
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-red-400 hover:bg-gray-700 hover:text-red-600"
+                    >
+                      Cerrar sesión
+                    </button>
                   </div>
                 )}
-                <img
-                  src={userImage || defaultImage}
-                  alt="Perfil"
-                  className={`w-full h-full object-cover ${imageLoading ? 'invisible' : 'visible'}`}
-                  onLoad={() => setImageLoading(false)}
-                  onError={(e) => {
-                    if (e.target.src !== defaultImage) {
-                      e.target.src = defaultImage;
-                    }
-                    setImageLoading(false);
-                  }}
-                />
-              </button>
+              </div>
             ) : (
-              <Link to="/login" className="text-gray-300 hover:text-white px-3 py-2">
+              <Link to="/login" className="text-gray-300 hover:text-white px-2 py-1 sm:px-3 sm:py-2 text-sm">
                 Iniciar sesión
               </Link>
             )}
@@ -174,8 +204,8 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Segunda fila: Barra de búsqueda - visible en todas las pantallas */}
-        <div className="w-full md:w-auto md:flex-grow md:max-w-2xl">
+        {/* Barra de búsqueda */}
+        <div className="w-full md:w-auto md:flex-grow md:max-w-2xl mt-3 md:mt-0 md:px-4 order-last md:order-none">
           <form onSubmit={handleSearch} className="flex items-center bg-gray-800 rounded-md p-1">
             <input
               type="text"
@@ -185,14 +215,14 @@ const Navbar = () => {
                 setSearchQuery(e.target.value);
                 fetchSuggestions(e.target.value);
               }}
-              className="bg-transparent text-white px-2 py-1 outline-none w-full"
+              className="bg-transparent text-white px-2 py-1 outline-none w-full text-sm sm:text-base"
             />
-            <button type="submit" className="text-green-400 px-2 text-xl">🔍</button>
+            <button type="submit" className="text-green-400 px-2 text-lg sm:text-xl">🔍</button>
           </form>
           
           {/* Mostrar sugerencias */}
           {searchSuggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 md:left-auto md:right-auto bg-gray-800 rounded-b-md shadow-lg z-50">
+            <div className="absolute left-0 right-0 md:left-auto md:right-auto bg-gray-800 rounded-b-md shadow-lg z-50 mt-1">
               {searchSuggestions.map((item, index) => (
                 <div
                   key={index}
@@ -203,21 +233,21 @@ const Navbar = () => {
                     setSearchSuggestions([]);
                   }}
                 >
-                  <div className="font-medium text-white">{item.title}</div>
-                  <div className="text-sm text-gray-400">{item.artist}</div>
+                  <div className="font-medium text-white text-sm sm:text-base">{item.title}</div>
+                  <div className="text-xs sm:text-sm text-gray-400">{item.artist}</div>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Tercera fila: Menú de escritorio */}
+        {/* Menú de escritorio */}
         <div className="hidden md:flex items-center gap-4">
           {authenticated ? (
             <>
               <Link to="/biblioteca" className="text-gray-300 hover:text-white">📚 Biblioteca</Link>
               <Link to="/emociones" className="text-gray-300 hover:text-white">😄 Emocionómetro</Link>
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -267,7 +297,10 @@ const Navbar = () => {
 
         {/* Menú móvil desplegable */}
         {mobileMenuOpen && (
-          <div className="md:hidden w-full bg-gray-800 rounded-md shadow-lg py-2 mt-2">
+          <div 
+            ref={mobileMenuRef}
+            className="md:hidden w-full bg-gray-800 rounded-md shadow-lg py-2 mt-3"
+          >
             <div className="flex flex-col">
               {authenticated ? (
                 <>
@@ -302,8 +335,15 @@ const Navbar = () => {
               ) : (
                 <>
                   <Link 
-                    to="/registro" 
+                    to="/login" 
                     className="px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white border-b border-gray-700"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Iniciar sesión
+                  </Link>
+                  <Link 
+                    to="/registro" 
+                    className="px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Registrarse
@@ -311,25 +351,6 @@ const Navbar = () => {
                 </>
               )}
             </div>
-          </div>
-        )}
-
-        {/* Menú de usuario móvil */}
-        {userMenuOpen && (
-          <div className="md:hidden absolute top-16 right-4 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50">
-            <Link
-              to="/perfil"
-              className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
-              onClick={() => setUserMenuOpen(false)}
-            >
-              Mi perfil
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="w-full text-left px-4 py-2 text-red-400 hover:bg-gray-700 hover:text-red-600"
-            >
-              Cerrar sesión
-            </button>
           </div>
         )}
       </div>
