@@ -12,7 +12,18 @@ const auth = require("../middlewares/auth")
 
 router.post("/register",registerUser)
 router.post("/login",loginUser)
-router.post('/update-profile-image', upload, updateProfileImage);
+router.post(
+  '/update-profile-image',
+  (req, res, next) => {
+    upload(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+      next();
+    });
+  },
+  updateProfileImage
+);
 router.get('/getUser',auth,getUser)
 router.post("/send-verification-email", auth, sendVerificationEmail);
 router.get("/verify-email/:token", verifyEmail);

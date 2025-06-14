@@ -78,6 +78,10 @@ exports.getUser = async (req, res) => {
 
 // Actualizar imagen de perfil
 exports.updateProfileImage = async (req, res) => {
+  // 0. Verificar si hay error en el archivo
+  if (req.fileError) {
+    return res.status(400).json({ error: req.fileError.message });
+  }
   // 1. Obtener token de headers
   const authHeader = req.headers['authorization'];
   if (!authHeader) {
@@ -186,7 +190,7 @@ exports.verifyEmail = async (req, res) => {
     user.isVerified = true;
     await user.save();
 
-    res.redirect("https://moodify-wf1j.onrender.com/perfil");
+    res.redirect("https://moodify-wf1j.onrender.com");
   } catch (error) {
     console.error("Error verificando email:", error);
     res.status(400).send("Token inválido o expirado");

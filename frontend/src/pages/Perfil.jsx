@@ -94,23 +94,8 @@ const Perfil = () => {
 
     try {
       const formData = new FormData();
-      formData.append("token", token);
 
-      if (imageOption === "url" && imageUrl) {
-        try {
-          new URL(imageUrl); // Validar URL
-          formData.append("imageUrl", imageUrl);
-        } catch (error) {
-          setNotification({
-            message: "Por favor ingresa una URL válida",
-            type: "error",
-          });
-          setIsLoading(false);
-          return;
-        }
-      } else if (imageOption === "file" && selectedFile) {
-        formData.append("image", selectedFile);
-      } else {
+      if (!selectedFile) {
         setNotification({
           message: "Por favor selecciona una imagen",
           type: "error",
@@ -118,6 +103,8 @@ const Perfil = () => {
         setIsLoading(false);
         return;
       }
+
+      formData.append("image", selectedFile);
 
       const response = await axios.post(
         "https://moodify-wf1j.onrender.com/users/update-profile-image",
@@ -218,58 +205,20 @@ const Perfil = () => {
           <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
             <h3 className="text-xl font-bold mb-4">Cambiar foto de perfil</h3>
 
-            <div className="flex border-b border-gray-700 mb-4">
-              <button
-                className={`flex-1 py-2 ${
-                  imageOption === "url"
-                    ? "text-green-500 border-b-2 border-green-500"
-                    : ""
-                }`}
-                onClick={() => setImageOption("url")}
-              >
-                Desde URL
-              </button>
-              <button
-                className={`flex-1 py-2 ${
-                  imageOption === "file"
-                    ? "text-green-500 border-b-2 border-green-500"
-                    : ""
-                }`}
-                onClick={() => setImageOption("file")}
-              >
-                Subir archivo
-              </button>
-            </div>
-
             <form onSubmit={handleImageUpload}>
-              {imageOption === "url" ? (
-                <div>
-                  <input
-                    type="text"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="Ingresa URL de la imagen"
-                    className="w-full p-3 bg-gray-700 rounded mb-4"
-                  />
-                  <div className="text-xs text-gray-400 mb-4">
-                    Ejemplo: https://ejemplo.com/imagen.jpg
+              <div className="mb-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full p-3 bg-gray-700 rounded"
+                />
+                {selectedFile && (
+                  <div className="mt-2 text-sm text-green-400">
+                    Archivo seleccionado: {selectedFile.name}
                   </div>
-                </div>
-              ) : (
-                <div className="mb-4">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="w-full p-3 bg-gray-700 rounded"
-                  />
-                  {selectedFile && (
-                    <div className="mt-2 text-sm text-green-400">
-                      Archivo seleccionado: {selectedFile.name}
-                    </div>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
 
               <div className="flex justify-end space-x-3">
                 <button

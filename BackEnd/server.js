@@ -40,7 +40,6 @@ app.use((req, res, next) => {
 });
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use("/uploads", express.static("uploads"));
 
 //Conexion a MongoDB
 mongoose.connect(process.env.MONGO_URL)
