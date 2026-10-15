@@ -1,16 +1,38 @@
-import { Router } from 'express';
-import * as s from './deezerService.js';
+const express = require("express");
+const router = express.Router();
 
-const r = Router();
+const {
+  buscarArtistas,
+  artistasPorGenero,
+  topArtista,
+  buscarCanciones,
+  cancionFresca,
+  porEmocion,
+} = require("../services/deezerServicie");
+
 const ok = (fn) => async (req, res) => {
-  try { res.json(await fn(req)); }
-  catch (e) { console.error(e); res.status(502).json({ error: e.message }); }
+  try {
+    res.json(await fn(req));
+  } catch (e) {
+    console.error("[deezerRouter]", e.message);
+    res.status(502).json({ error: e.message });
+  }
 };
 
-r.get('/artistas', ok(q => q.query.q ? s.buscarArtistas(q.query.q)
-  : s.artistasPorGenero((q.query.genres || 'pop').split(','))));
-r.get('/artistas/:id/top', ok(q => s.topArtista(q.params.id)));
-r.get('/canciones', ok(q => s.buscarCanciones(q.query.q)));
-r.get('/cancion/:id', ok(q => s.cancionFresca(q.params.id)));
-r.get('/emocion', ok(q => s.porEmocion(+q.query.animo || 50, +q.query.energia || 50)));
-export default r;
+router.get("/artistas", ok((q) =>
+  q.query.q
+    ? buscarArtistas(q.query.q)
+    : artistasPorGenero((q.query.genres || q.query.genre || "pop").split(",").map(s => s.trim()))
+));
+
+router.get("/artistas/:id/top", ok((q) => topArtista(q.params.id)));
+
+router.get("/canciones", ok((q) => buscarCanciones(q.query.q)));
+
+router.get("/cancion/:id", ok((q) => cancionFresca(q.params.id)));
+
+router.get("/emocion", ok((q) =>
+  porEmocion(Number(q.query.animo) || 50, Number(q.query.energia) || 50)
+));
+
+module.exports = router;
