@@ -46,7 +46,7 @@ const songSchema = new mongoose.Schema({
   },
   popularity: {
     type: Number,  
-    required: true
+    default: 0
   }
 });
 

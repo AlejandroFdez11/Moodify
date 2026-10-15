@@ -35,7 +35,7 @@ exports.addSong = async (req, res) => {
       preview_url: track.preview_url,
       duration_ms: track.duration_ms, 
       release_date: track.album.release_date,
-      popularity: track.popularity,
+      popularity: track.popularity ?? 0,
     });
 
     await newSong.save();
@@ -69,63 +69,24 @@ exports.getSongById = async (req, res) => {
 };
 
 exports.getSongsByArtist = async (req, res) => {
-  const { artistId } = req.params;
-  const limit = 5;
-
   try {
-    const token = await getSpotifyToken();
-
-    // Obtener álbumes del artista
-    const albumsRes = await axios.get(
-      `https://api.spotify.com/v1/artists/${artistId}/albums`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        params: {
-          limit: 10,
-          include_groups: "album,single",
-        },
-      }
-    );
-
-    const albums = albumsRes.data.items;
-
-    let songs = [];
-
-    for (const album of albums) {
-      if (songs.length >= limit) break;
-
-      const tracksRes = await axios.get(
-        `https://api.spotify.com/v1/albums/${album.id}/tracks`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { limit: 5 },
-        }
-      );
-
-      const enrichedTracks = tracksRes.data.items.map((track) => ({
-        ...track,
-        album, // Aquí inyectamos los datos del álbum actual
-      }));
-
-      songs = songs.concat(enrichedTracks);
-    }
-
-    // Limita después de enriquecer
-    songs = songs.slice(0, limit);
-
-    const formattedSongs = songs.map((track) => ({
+    const albums = await spotifyGet(`/artists/${req.params.artistId}/albums`, { limit: 3, include_groups: "album,single" });
+    const lists = await Promise.all((albums.items || []).slice(0, 2).map(async (album) => {
+      const t = await spotifyGet(`/albums/${album.id}/tracks`, { limit: 3 });
+      return (t.items || []).map((track) => ({ ...track, album }));
+    }));
+    res.json(lists.flat().slice(0, 5).map((track) => ({
       _id: track.id,
       titulo: track.name,
       artista: track.artists.map((a) => a.name).join(", "),
       imagen: track.album?.images?.[0]?.url || "",
       spotifyId: track.id,
-      preview_url: track.preview_url,
+      preview_url: track.preview_url || null,
       uri: track.uri,
-    }));
-
-    res.json(formattedSongs);
-  } catch (error) {
-    console.error("Error al obtener canciones del artista:", error.response?.data || error.message);
-    res.status(500).json({ error: "Error al obtener canciones del artista" });
+    })));
+  } catch (e) {
+    console.error("Canciones del artista:", e.response?.status, e.message);
+    const { status, error } = spotifyError(e);
+    res.status(status).json({ error });
   }
 };

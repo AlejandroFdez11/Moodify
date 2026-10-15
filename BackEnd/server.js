@@ -22,8 +22,8 @@ if (!fs.existsSync(uploadsDir)) {
 const userRoutes = require("./routes/userRoutes")
 const songRoutes = require("./routes/songRoutes")
 const playlistRoutes = require("./routes/playlistRoutes")
-const spotifyRouter = require ("./routes/spotifyRouter")
 const artistaRoutes = require("./routes/artistaRoutes")
+const deezerRotes = require ("./routes/deezerRouter")
 const { authenticateSpotify } = require("./config/spotifyConfig")
 
 const app = express()
@@ -59,10 +59,10 @@ mongoose.connect(process.env.MONGO_URL)
 .catch(e => console.error("❌ Error MongoDB:", e))
 
 // Rutas
+app.use("/",deezerRotes)
 app.use("/users", userRoutes)
 app.use("/songs", songRoutes)
 app.use("/playlists", playlistRoutes)
-app.use("/spotify", spotifyRouter)
 app.use("/artistas", artistaRoutes)
 
 // Autenticación Spotify

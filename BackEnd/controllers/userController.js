@@ -1,22 +1,51 @@
-const User = require ("../models/User")
-const bcrypt = require ("bcryptjs")
-const jwt = require ("jsonwebtoken")
-const upload = require("../middlewares/uploadImagen")
-const nodemailer = require('nodemailer');
+const User = require("../models/User");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const upload = require("../middlewares/uploadImagen");
+const nodemailer = require("nodemailer");
 
 exports.registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: "Todos los campos son obligatorios" });
-    }
+    const cleanName = String(name || "").trim();
+    const cleanEmail = String(email || "")
+      .toLowerCase()
+      .trim();
+    const pass = String(password || "");
 
-    // Comprobar si email ya existe
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: "El email ya está registrado" });
-    }
+    if (cleanName.length < 2)
+      return res
+        .status(400)
+        .json({
+          field: "name",
+          error: "El nombre debe tener al menos 2 caracteres",
+        });
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail))
+      return res
+        .status(400)
+        .json({
+          field: "email",
+          error: "Introduce un correo válido (ejemplo: nombre@correo.com)",
+        });
+    if (pass.length < 8 || !/[A-Za-z]/.test(pass) || !/\d/.test(pass))
+      return res
+        .status(400)
+        .json({
+          field: "password",
+          error:
+            "La contraseña debe tener 8 caracteres o más, con letras y números",
+        });
+
+    const existingUser = await User.findOne({ email: cleanEmail });
+    if (existingUser)
+      return res
+        .status(409)
+        .json({
+          field: "email",
+          error:
+            "Ya existe una cuenta con ese correo. ¿Quieres iniciar sesión?",
+        });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -25,8 +54,8 @@ exports.registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       imagenPerfil: req.file
-            ? `${req.BASE_URL}/uploads/${req.file.filename}`
-            : "",
+        ? `${req.BASE_URL}/uploads/${req.file.filename}`
+        : "",
     });
 
     await newUser.save();
@@ -45,34 +74,39 @@ exports.registerUser = async (req, res) => {
 };
 
 exports.loginUser = async (req, res) => {
-    const { email, password } = req.body;
-  
-    try {
-      const user = await User.findOne({ email });
-      if (!user) return res.status(400).json({ message: "Usuario no encontrado" });
-  
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) return res.status(400).json({ message: "Contraseña incorrecta" });
-  
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-      res.json({ token, user });
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-}
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(400).json({ message: "Usuario no encontrado" });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(400).json({ message: "Contraseña incorrecta" });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    const { password: _omit, ...userSinPassword } = user.toObject();
+    res.json({ token, user: userSinPassword });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
 //Obtener todos los datos de un usuario
 exports.getUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-      .select('-password')
-      .populate('playlists', 'name imagen');
+      .select("-password")
+      .populate("playlists", "name imagen");
 
-    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener los datos del usuario' });
+    res.status(500).json({ error: "Error al obtener los datos del usuario" });
   }
 };
 
@@ -83,13 +117,13 @@ exports.updateProfileImage = async (req, res) => {
     return res.status(400).json({ error: req.fileError.message });
   }
   // 1. Obtener token de headers
-  const authHeader = req.headers['authorization'];
+  const authHeader = req.headers["authorization"];
   if (!authHeader) {
-    return res.status(401).json({ error: 'Token no proporcionado' });
+    return res.status(401).json({ error: "Token no proporcionado" });
   }
-  
-  const token = authHeader.split(' ')[1];
-  
+
+  const token = authHeader.split(" ")[1];
+
   try {
     // 2. Verificar token PRIMERO
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -98,41 +132,42 @@ exports.updateProfileImage = async (req, res) => {
     // 3. Buscar usuario
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
+      return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
     // 4. Verificar imagen DESPUÉS del token
     if (!req.file) {
-      return res.status(400).json({ error: 'No se ha proporcionado una imagen válida' });
+      return res
+        .status(400)
+        .json({ error: "No se ha proporcionado una imagen válida" });
     }
 
     // 5. Construir URL con fallback
-    const baseUrl = req.BASE_URL || 'https://moodify-wf1j.onrender.com';
+    const baseUrl = req.BASE_URL || "https://moodify-wf1j.onrender.com";
     const finalImageUrl = `${baseUrl}/uploads/${req.file.filename}`;
-    
+
     // 6. Actualizar imagen
     user.imagenPerfil = finalImageUrl;
     await user.save();
 
     // 7. Responder
-    res.status(200).json({ 
-      message: 'Imagen actualizada',
+    res.status(200).json({
+      message: "Imagen actualizada",
       imagenPerfil: finalImageUrl,
-      filename: req.file.filename
+      filename: req.file.filename,
     });
-    
   } catch (error) {
-    console.error('Error en updateProfileImage:', error);
-    
+    console.error("Error en updateProfileImage:", error);
+
     // Manejar errores específicos de JWT
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ error: 'Token inválido' });
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ error: "Token inválido" });
     }
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Token expirado' });
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Token expirado" });
     }
-    
-    res.status(500).json({ error: 'Error al actualizar la imagen de perfil' });
+
+    res.status(500).json({ error: "Error al actualizar la imagen de perfil" });
   }
 };
 
@@ -156,7 +191,7 @@ exports.sendVerificationEmail = async (req, res) => {
       return res.status(400).json({ error: "Usuario ya está verificado" });
     }
 
-    const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "1h" });
     const verifyUrl = `https://moodify-wf1j.onrender.com/users/verify-email/${token}`;
 
     const mailOptions = {

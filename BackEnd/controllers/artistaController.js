@@ -1,34 +1,58 @@
-const {spotifyApi,refreshToken} = require("../services/spotify")
-
+const { spotifyGet, spotifyError } = require("../services/spotifyHttp");
 
 exports.buscarArtistasPorGenero = async (req, res) => {
-  const genre = req.query.genre;
-
-  if (!genre) {
+  const genres = String(req.query.genres || req.query.genre || "")
+    .split(",")
+    .map((g) => g.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  if (!genres.length)
     return res.status(400).json({ error: "Falta parámetro genre" });
+
+  // Spotify limita /search a 10 resultados: una petición por género y se mezclan
+  const buscar = async (g) => {
+    const porGenero = await spotifyGet("/search", {
+      q: `genre:"${g}"`,
+      type: "artist",
+      limit: 10,
+    });
+    if (porGenero.artists?.items?.length) return porGenero;
+    return spotifyGet("/search", { q: g, type: "artist", limit: 10 }); // respaldo: búsqueda por texto
+  };
+  const results = await Promise.allSettled(genres.map(buscar));
+  console.log(
+    "Artistas por género:",
+    results.map((r) =>
+      r.status === "fulfilled"
+        ? r.value.artists?.items?.length
+        : r.reason.message,
+    ),
+  );
+  if (results.every((r) => r.status === "rejected")) {
+    console.error("Artistas por género:", results[0].reason?.message);
+    const { status, error } = spotifyError(results[0].reason);
+    return res.status(status).json({ error });
   }
 
-  try {
-    await refreshToken();
-
-    const data = await spotifyApi.searchArtists(genre, { limit: 50 });
-    const artists = (data.body.artists.items || [])
-      .filter((artist) =>
-        artist.genres?.some((g) =>
-          g.toLowerCase().includes(genre.toLowerCase())
-        )
-      )
-      .slice(0, 10)
-      .map((artist) => ({
-        id: artist.id,
-        nombre: artist.name,
-        imagen: artist.images?.[0]?.url || "/default-artist.png",
-        genre: artist.genres?.join(", ") || "Desconocido",
-      }));
-
-    res.status(200).json(artists);
-  } catch (error) {
-    console.error("Error buscando artistas por género:", error.message);
-    res.status(500).json({ error: "Error interno del servidor" });
+  const seen = new Set();
+  const artists = [];
+  const lists = results
+    .filter((r) => r.status === "fulfilled")
+    .map((r) => r.value.artists?.items || []);
+  for (let i = 0; i < 10; i++) {
+    // reparto equilibrado entre géneros
+    for (const l of lists) {
+      const a = l[i];
+      if (a && !seen.has(a.id)) {
+        seen.add(a.id);
+        artists.push({
+          id: a.id,
+          nombre: a.name,
+          imagen: a.images?.[0]?.url || "/default-artist.png",
+          genre: a.genres?.slice(0, 2).join(", ") || "Desconocido",
+        });
+      }
+    }
   }
+  res.json(artists.slice(0, 12));
 };
