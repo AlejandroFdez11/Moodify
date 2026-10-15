@@ -1,0 +1,16 @@
+.env
+.env.local
+.env.*.local
+
+node_modules/
+
+uploads/*
+!uploads/.gitkeep
+
+*.log
+npm-debug.log*
+
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
