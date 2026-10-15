@@ -14,7 +14,6 @@ import DetallesSong from './pages/DetallesSong'
 import DetallesPlaylist from "./pages/DetallesPlaylists"
 import Emociones from "./pages/Emociones"
 import ListadoEmocion from './pages/ListadoEmocion'
-import DetallesPlaylistSpotify from "./pages/DetallesPlaylistSpotify"
 
 const App = () => {
   return (
@@ -35,7 +34,6 @@ const App = () => {
           <Route path='/emocion' element={<Emociones/>}/>
           <Route path="/emociones/:emocion" element={<ListadoEmocion />} />
           <Route path="/emocion/:emocion" element={<ListadoEmocion />} />
-          <Route path="/spotify/playlist/:id" element={<DetallesPlaylistSpotify />} />
 
 
           <Route path="*" element={<PagError/>}/>

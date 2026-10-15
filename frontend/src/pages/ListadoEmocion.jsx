@@ -1,66 +1,67 @@
 import { useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
-
+import api from "../services/Api";
 import ArtistCard from "../components/ArtistCard";
 import SongList from "../components/SongList";
 
 const ListadoEmocion = () => {
   const { emocion } = useParams();
   const [searchParams] = useSearchParams();
-  const genre = searchParams.get("genre");
+
+  // Acepta ?genres=pop,dance (nuevo) o ?genre=pop (compatibilidad)
+  const genresParam =
+    searchParams.get("genres") || searchParams.get("genre") || "";
 
   const [artists, setArtists] = useState([]);
+  const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [songs, setSongs] = useState([]);
 
   useEffect(() => {
-    if (!genre) return;
+    if (!genresParam) return;
 
-    const fetchSpotifyData = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError(null);
-
       try {
-        // 1. Obtener artistas filtrados por género
-        const artistsRes = await axios.get("https://moodify-wf1j.onrender.com/artistas", {
-          params: { genre },
+        // 1) Artistas por género (Deezer)
+        const { data: artistas } = await api.get("/artistas", {
+          params: { genres: genresParam },
         });
 
-        const fetchedArtists = artistsRes.data.map((a) => ({
+        const normalized = artistas.map((a) => ({
           id: a.id,
           name: a.nombre,
           imagen: a.imagen,
-          genero: a.genre || "Desconocido",
+          genero: "Deezer",
         }));
+        setArtists(normalized);
 
-        setArtists(fetchedArtists);
-
-        // 2. Obtener canciones por artista
-        const songsPorArtista = await Promise.all(
-          fetchedArtists.map(async (artist) => {
-            const res = await axios.get(
-              `https://moodify-wf1j.onrender.com/songs/songsArtist/${artist.id}`,
-              { params: { limit: 5 } }
-            );
-            return res.data;
-          })
+        // 2) Top tracks de los 6 primeros artistas (paralelo + tolerante a fallos)
+        const top6 = normalized.slice(0, 6);
+        const results = await Promise.allSettled(
+          top6.map((a) => api.get(`/artistas/${a.id}/top`))
         );
 
-        setSongs(songsPorArtista.flat());
+        const allSongs = results
+          .filter((r) => r.status === "fulfilled")
+          .flatMap((r) => r.value.data);
+
+        // Dedup por id de canción
+        const unicos = [...new Map(allSongs.map((t) => [t.id, t])).values()];
+        setSongs(unicos);
       } catch (err) {
-        setError("Error al cargar datos de Spotify");
         console.error(err);
+        setError("Error al cargar datos de Deezer");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSpotifyData();
-  }, [genre]);
+    fetchData();
+  }, [genresParam]);
 
-  if (!genre) {
+  if (!genresParam) {
     return (
       <div className="p-6 text-white">
         <h1 className="text-3xl font-bold mb-4">Género no especificado</h1>
@@ -76,12 +77,11 @@ const ListadoEmocion = () => {
         <span className="text-green-400 capitalize">{emocion}</span>
       </h1>
 
-      {loading && <p className="text-gray-400">Cargando datos de Spotify...</p>}
+      {loading && <p className="text-gray-400">Cargando datos de Deezer...</p>}
       {error && <p className="text-red-500">{error}</p>}
 
       {!loading && !error && (
         <>
-          {/* ARTISTAS */}
           {artists.length > 0 ? (
             <>
               <h2 className="text-2xl text-white mb-2">Artistas</h2>
@@ -94,10 +94,11 @@ const ListadoEmocion = () => {
               </div>
             </>
           ) : (
-            <p className="text-gray-400 mb-6">No se encontraron artistas para este género.</p>
+            <p className="text-gray-400 mb-6">
+              No se encontraron artistas para este género.
+            </p>
           )}
 
-          {/* CANCIONES */}
           {songs.length > 0 ? (
             <SongList songs={songs} />
           ) : (

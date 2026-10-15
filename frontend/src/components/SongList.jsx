@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import api from "../services/Api";
 import Notification from "./Notificacion";
 
 const SongList = ({ songs }) => {
@@ -9,18 +10,36 @@ const SongList = ({ songs }) => {
   const [selectedSong, setSelectedSong] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
   useEffect(() => {
     if (showModal) {
-      axios
-        .get("https://moodify-wf1j.onrender.com/playlists/me", {
+      api
+        .get("/playlists/me", {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => setPlaylists(res.data))
         .catch((err) => console.error("Error al cargar playlists:", err));
     }
-  }, [showModal]);
+  }, [showModal, token]);
+
+  const handlePlay = (song) => {
+    // Deezer track DTO: { id, titulo, artista, portada, preview, duracion }
+    if (!song.preview) {
+      addNotification("Esta canción no tiene preview disponible", "error");
+      return;
+    }
+    navigate(`/song/${song.id}`, {
+      state: {
+        id: song.id,
+        titulo: song.titulo,
+        artista: song.artista,
+        portada: song.portada || song.imagen,
+        preview: song.preview,
+      },
+    });
+  };
 
   const handleAddToPlaylist = async (playlistId, song) => {
     if (!song) {
@@ -29,23 +48,12 @@ const SongList = ({ songs }) => {
     }
 
     try {
-      const spotifyId = song.spotifyId.includes(":")
-        ? song.spotifyId.split(":")[2]
-        : song.spotifyId;
+      // Ahora el ID que guardamos es el de Deezer (numérico)
+      const payload = { songId: String(song.id) };
 
-      const payload = {
-        songId: spotifyId,
-      };
-
-      const response = await axios.post(
-        `https://moodify-wf1j.onrender.com/playlists/${playlistId}/add-song`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.post(`/playlists/${playlistId}/add-song`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       addNotification("Canción añadida correctamente a la playlist", "success");
       setShowModal(false);
@@ -69,14 +77,13 @@ const SongList = ({ songs }) => {
     <div className="bg-gray-900 p-6 rounded-lg shadow-md">
       <h2 className="text-white text-xl mb-4">Lista de Canciones</h2>
 
-      {/* Notificaciones flotantes */}
       <div className="fixed top-4 right-4 space-y-2 z-[999]">
-        {notifications.map((notification) => (
+        {notifications.map((n) => (
           <Notification
-            key={notification.id}
-            message={notification.message}
-            type={notification.type}
-            onClose={() => removeNotification(notification.id)}
+            key={n.id}
+            message={n.message}
+            type={n.type}
+            onClose={() => removeNotification(n.id)}
           />
         ))}
       </div>
@@ -85,19 +92,28 @@ const SongList = ({ songs }) => {
         {songs.length > 0 ? (
           songs.map((song, index) => (
             <li
-              key={index}
+              key={song.id || index}
               className="flex items-center justify-between text-gray-300 p-2 bg-gray-800 rounded hover:bg-gray-700 relative"
             >
-              <div className="flex items-center">
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  onClick={() => handlePlay(song)}
+                  className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-500 flex items-center justify-center text-white text-lg flex-shrink-0"
+                  title="Reproducir preview"
+                >
+                  ▶
+                </button>
                 <img
-                  src={song.imagen}
+                  src={song.portada || song.imagen || "/default-cover.png"}
                   alt={song.titulo}
-                  className="w-12 h-12 mr-3 rounded"
+                  className="w-12 h-12 rounded object-cover flex-shrink-0"
                 />
-                {song.titulo} - {song.artista}
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{song.titulo}</p>
+                  <p className="truncate text-sm text-gray-400">{song.artista}</p>
+                </div>
               </div>
 
-              {/* Botón de opciones */}
               <div className="relative">
                 <button
                   onClick={() =>
@@ -130,7 +146,6 @@ const SongList = ({ songs }) => {
         )}
       </ul>
 
-      {/* Modal para elegir playlist */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
           <div className="bg-gray-900 border border-gray-700 p-6 rounded-xl w-96 shadow-2xl">
@@ -146,9 +161,7 @@ const SongList = ({ songs }) => {
                     className="w-10 h-10 rounded-md object-cover"
                   />
                   <button
-                    onClick={() =>
-                      handleAddToPlaylist(playlist._id, selectedSong)
-                    }
+                    onClick={() => handleAddToPlaylist(playlist._id, selectedSong)}
                     className="flex-1 text-left bg-gray-700 hover:bg-green-600 text-white px-4 py-2 rounded-md transition"
                   >
                     {playlist.name}
