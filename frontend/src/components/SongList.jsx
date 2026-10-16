@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../services/Api";
 import Notification from "./Notificacion";
+import { usePlayer } from "../context/PlayerContext";  
 
 const SongList = ({ songs }) => {
   const [dropdownIndex, setDropdownIndex] = useState(null);
@@ -10,7 +10,7 @@ const SongList = ({ songs }) => {
   const [selectedSong, setSelectedSong] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
-  const navigate = useNavigate();
+  const { play, currentTrack, isPlaying, togglePlay } = usePlayer(); 
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -24,21 +24,32 @@ const SongList = ({ songs }) => {
     }
   }, [showModal, token]);
 
+  // Reemplaza handlePlay
   const handlePlay = (song) => {
-    // Deezer track DTO: { id, titulo, artista, portada, preview, duracion }
     if (!song.preview) {
       addNotification("Esta canción no tiene preview disponible", "error");
       return;
     }
-    navigate(`/song/${song.id}`, {
-      state: {
-        id: song.id,
-        titulo: song.titulo,
-        artista: song.artista,
-        portada: song.portada || song.imagen,
-        preview: song.preview,
-      },
-    });
+    // Encolar TODA la lista y arrancar desde esta canción
+    const normalized = songs
+      .filter((s) => s.preview)
+      .map((s) => ({
+        id: s.id,
+        titulo: s.titulo,
+        artista: s.artista,
+        portada: s.portada || s.imagen,
+        preview: s.preview,
+      }));
+
+    const target = normalized.find((t) => t.id === song.id) || {
+      id: song.id,
+      titulo: song.titulo,
+      artista: song.artista,
+      portada: song.portada || song.imagen,
+      preview: song.preview,
+    };
+
+    play(target, normalized);
   };
 
   const handleAddToPlaylist = async (playlistId, song) => {
@@ -46,15 +57,11 @@ const SongList = ({ songs }) => {
       addNotification("Error: Canción no seleccionada.", "error");
       return;
     }
-
     try {
-      // Ahora el ID que guardamos es el de Deezer (numérico)
       const payload = { songId: String(song.id) };
-
       await api.post(`/playlists/${playlistId}/add-song`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       addNotification("Canción añadida correctamente a la playlist", "success");
       setShowModal(false);
       setSelectedSong(null);
@@ -90,57 +97,66 @@ const SongList = ({ songs }) => {
 
       <ul className="space-y-3">
         {songs.length > 0 ? (
-          songs.map((song, index) => (
-            <li
-              key={song.id || index}
-              className="flex items-center justify-between text-gray-300 p-2 bg-gray-800 rounded hover:bg-gray-700 relative"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <button
-                  onClick={() => handlePlay(song)}
-                  className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-500 flex items-center justify-center text-white text-lg flex-shrink-0"
-                  title="Reproducir preview"
-                >
-                  ▶
-                </button>
-                <img
-                  src={song.portada || song.imagen || "/default-cover.png"}
-                  alt={song.titulo}
-                  className="w-12 h-12 rounded object-cover flex-shrink-0"
-                />
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{song.titulo}</p>
-                  <p className="truncate text-sm text-gray-400">{song.artista}</p>
-                </div>
-              </div>
-
-              <div className="relative">
-                <button
-                  onClick={() =>
-                    setDropdownIndex(dropdownIndex === index ? null : index)
-                  }
-                  className="text-white text-xl px-2"
-                >
-                  ⋮
-                </button>
-
-                {dropdownIndex === index && (
-                  <div className="absolute right-0 mt-2 w-48 bg-gray-700 border border-gray-600 rounded shadow-lg z-10">
-                    <button
-                      className="block w-full px-4 py-2 text-left text-white hover:bg-gray-600"
-                      onClick={() => {
-                        setSelectedSong(song);
-                        setShowModal(true);
-                        setDropdownIndex(null);
-                      }}
-                    >
-                      Añadir a Playlist
-                    </button>
+          songs.map((song, index) => {
+            const isThisPlaying = currentTrack?.id === song.id && isPlaying;   
+            return (
+              <li
+                key={song.id || index}
+                className="flex items-center justify-between text-gray-300 p-2 bg-gray-800 rounded hover:bg-gray-700 relative"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <button
+                    onClick={() =>
+                      currentTrack?.id === song.id ? togglePlay() : handlePlay(song)
+                    }
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-lg flex-shrink-0 ${
+                      isThisPlaying
+                        ? "bg-emerald-500 hover:bg-emerald-400"
+                        : "bg-green-600 hover:bg-green-500"
+                    }`}
+                    title={isThisPlaying ? "Pausar" : "Reproducir"}
+                  >
+                    {isThisPlaying ? "⏸" : "▶"}
+                  </button>
+                  <img
+                    src={song.portada || song.imagen || "/default-cover.png"}
+                    alt={song.titulo}
+                    className="w-12 h-12 rounded object-cover flex-shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{song.titulo}</p>
+                    <p className="truncate text-sm text-gray-400">{song.artista}</p>
                   </div>
-                )}
-              </div>
-            </li>
-          ))
+                </div>
+
+                <div className="relative">
+                  <button
+                    onClick={() =>
+                      setDropdownIndex(dropdownIndex === index ? null : index)
+                    }
+                    className="text-white text-xl px-2"
+                  >
+                    ⋮
+                  </button>
+
+                  {dropdownIndex === index && (
+                    <div className="absolute right-0 mt-2 w-48 bg-gray-700 border border-gray-600 rounded shadow-lg z-10">
+                      <button
+                        className="block w-full px-4 py-2 text-left text-white hover:bg-gray-600"
+                        onClick={() => {
+                          setSelectedSong(song);
+                          setShowModal(true);
+                          setDropdownIndex(null);
+                        }}
+                      >
+                        Añadir a Playlist
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </li>
+            );
+          })
         ) : (
           <p className="text-gray-400">No hay canciones disponibles</p>
         )}

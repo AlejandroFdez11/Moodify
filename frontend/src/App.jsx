@@ -14,8 +14,11 @@ import DetallesSong from "./pages/DetallesSong";
 import DetallesPlaylist from "./pages/DetallesPlaylists";
 import Emociones from "./pages/Emociones";
 import ListadoEmocion from "./pages/ListadoEmocion";
-
 import { useLocation } from "react-router-dom";
+
+// 👇 NUEVOS
+import { PlayerProvider } from "./context/PlayerContext";
+import PlayerBar from "./components/PlayerBar";
 
 const ListadoEmocionWrapper = () => {
   const location = useLocation();
@@ -24,32 +27,31 @@ const ListadoEmocionWrapper = () => {
 
 const App = () => {
   return (
-    <Router>
-      <div className="bg-gray-900 min-h-screen text-white">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/registro" element={<Registro />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/perfil" element={<Perfil />} />
-          <Route path="/buscador" element={<Busca />} />
-          <Route path="/biblioteca" element={<Biblioteca />} />
-          <Route path="/song/:id" element={<Reproductor />} />
-          <Route path="/detalles/:id" element={<DetallesSong />} />
-          <Route path="/playlist/:playlistId" element={<DetallesPlaylist />} />
-          <Route path="/emociones" element={<Emociones />} />
-          <Route path="/emocion" element={<Emociones />} />
-          <Route
-            path="/emociones/:emocion"
-            element={<ListadoEmocionWrapper />}
-          />
-          <Route path="/emocion/:emocion" element={<ListadoEmocion />} />
-
-          <Route path="*" element={<PagError />} />
-        </Routes>
-      </div>
-      <Footer />
-    </Router>
+    <PlayerProvider>                     
+      <Router>
+        <div className="bg-gray-900 min-h-screen text-white pb-24"> {/* 👈 pb-24 para que la barra no tape contenido */}
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/registro" element={<Registro />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/perfil" element={<Perfil />} />
+            <Route path="/buscador" element={<Busca />} />
+            <Route path="/biblioteca" element={<Biblioteca />} />
+            <Route path="/song/:id" element={<Reproductor />} />
+            <Route path="/detalles/:id" element={<DetallesSong />} />
+            <Route path="/playlist/:playlistId" element={<DetallesPlaylist />} />
+            <Route path="/emociones" element={<Emociones />} />
+            <Route path="/emocion" element={<Emociones />} />
+            <Route path="/emociones/:emocion" element={<ListadoEmocionWrapper />} />
+            <Route path="/emocion/:emocion" element={<ListadoEmocion />} />
+            <Route path="*" element={<PagError />} />
+          </Routes>
+        </div>
+        <Footer />
+        <PlayerBar />                  
+      </Router>
+    </PlayerProvider>
   );
 };
 
