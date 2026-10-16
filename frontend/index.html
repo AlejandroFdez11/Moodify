@@ -9,16 +9,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
-    
-    <!-- Script para manejar rutas en Vercel -->
-    <script>
-      // Solución para el error 404 en Vercel
-      const pathSegments = window.location.pathname.split('/').filter(Boolean);
-      if (pathSegments.length > 0 && !pathSegments.includes('index.html')) {
-        const newPath = window.location.origin + '/#' + window.location.pathname;
-        window.location.replace(newPath);
-      }
-    </script>
   </body>
 </html>

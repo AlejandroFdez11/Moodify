@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../services/Api";
 import { logout } from "../services/Auth";
 
 const Navbar = () => {
@@ -12,33 +12,29 @@ const Navbar = () => {
   const [imageLoading, setImageLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  
+
   const mobileMenuRef = useRef(null);
   const userMenuRef = useRef(null);
 
   const defaultImage =
     "https://imgs.search.brave.com/gpitD9caAmK6KPyVZsIQkKR2nUHUkAPNRSN-vzKvuEw/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/dmVjdG9yLXByZW1p/dW0vaWNvbm8tbWVt/YnJlc2lhLXBsYXRl/YWRvLWljb25vLXBl/cmZpbC1hdmF0YXIt/ZGVmZWN0by1pY29u/by1taWVtYnJvcy1p/bWFnZW4tdXN1YXJp/by1yZWRlcy1zb2Np/YWxlcy1pbHVzdHJh/Y2lvbi12ZWN0b3Jp/YWxfNTYxMTU4LTQx/OTUuanBnP3NlbXQ9/YWlzX2h5YnJpZCZ3/PTc0MA";
 
-  // Verifica el token y obtiene la imagen
+  // Autenticación
   const checkAuthentication = async () => {
     const token = localStorage.getItem("token");
-
     if (!token) {
       setAuthenticated(false);
       setUserImage(defaultImage);
       return;
     }
-
     try {
-      const response = await axios.get("https://moodify-wf1j.onrender.com/users/getUser", {
+      const response = await api.get("/users/getUser", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setAuthenticated(true);
       setUserImage(response.data.imagenPerfil || defaultImage);
     } catch (error) {
       console.warn("Error de autenticación:", error);
-      
       if (error.response?.status === 401) {
         logout();
         setAuthenticated(false);
@@ -49,45 +45,44 @@ const Navbar = () => {
     }
   };
 
-  // Obtener sugerencias de búsqueda
-  const fetchSuggestions = async (query) => {
-    if (query.length < 2) {
+  // Sugerencias de búsqueda con debounce (Deezer)
+  useEffect(() => {
+    if (searchQuery.length < 2) {
       setSearchSuggestions([]);
       return;
     }
-    
-    try {
-      const response = await axios.get(
-        `https://moodify-wf1j.onrender.com/songs/suggestions?q=${encodeURIComponent(query)}`
-      );
-      setSearchSuggestions(response.data.slice(0, 5)); // Limitar a 5 sugerencias
-    } catch (error) {
-      console.error("Error obteniendo sugerencias:", error);
-      setSearchSuggestions([]);
-    }
-  };
 
-  // Ejecuta al montar y en cambios de localStorage
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await api.get("/canciones", {
+          params: { q: searchQuery },
+        });
+        setSearchSuggestions(Array.isArray(data) ? data.slice(0, 5) : []);
+      } catch (error) {
+        console.error("[NavBar] sugerencias:", error.message);
+        setSearchSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Autenticación al montar y al cambiar localStorage
   useEffect(() => {
     checkAuthentication();
-
     const handleStorageChange = (e) => {
-      if (e.key === "token") {
-        checkAuthentication();
-      }
+      if (e.key === "token") checkAuthentication();
     };
-
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  // Escucha eventos personalizados para actualización de imagen
+  // Evento de actualización de imagen
   useEffect(() => {
     const handleImageUpdate = (e) => {
       setUserImage(e.detail || defaultImage);
       setImageLoading(false);
     };
-
     window.addEventListener("imageUpdated", handleImageUpdate);
     return () => window.removeEventListener("imageUpdated", handleImageUpdate);
   }, []);
@@ -110,7 +105,7 @@ const Navbar = () => {
     setMobileMenuOpen(false);
   };
 
-  // Cerrar menús cuando se hace clic fuera de ellos
+  // Cerrar menús al clicar fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
@@ -121,12 +116,41 @@ const Navbar = () => {
       }
       setSearchSuggestions([]);
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // ... el JSX es idéntico al tuyo, solo cambia el bloque de sugerencias:
+
+  {/* Sugerencias (JSX) */}
+  {searchSuggestions.length > 0 && (
+    <div className="absolute left-0 right-0 md:left-auto md:right-auto bg-gray-800 rounded-b-md shadow-lg z-50 mt-1">
+      {searchSuggestions.map((item) => (
+        <div
+          key={item.id}
+          className="p-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-b-0"
+          onClick={() => {
+            navigate(`/song/${item.id}`, {
+              state: {
+                id: item.id,
+                titulo: item.titulo,
+                artista: item.artista,
+                portada: item.portada,
+                preview: item.preview,
+              },
+            });
+            setSearchQuery("");
+            setSearchSuggestions([]);
+          }}
+        >
+          <div className="font-medium text-white text-sm sm:text-base">
+            {item.titulo}
+          </div>
+          <div className="text-xs sm:text-sm text-gray-400">{item.artista}</div>
+        </div>
+      ))}
+    </div>
+  )}
 
   return (
     <nav className="bg-gray-900 p-3 sm:p-4 shadow-lg sticky top-0 z-50">
@@ -213,7 +237,6 @@ const Navbar = () => {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                fetchSuggestions(e.target.value);
               }}
               className="bg-transparent text-white px-2 py-1 outline-none w-full text-sm sm:text-base"
             />

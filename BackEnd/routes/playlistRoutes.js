@@ -6,8 +6,7 @@ const {createPlaylist,
     getPlaylistSongs,
     getPlaylistById,
     deletePlaylist,
-    removeSongFromPlaylist,
-    getPlaylistsPorArtistas} = require("../controllers/playlistController");
+    removeSongFromPlaylist} = require("../controllers/playlistController");
 const Auth = require("../middlewares/auth");
 const uploadPlaylistImage = require("../middlewares/uploadPlaylistsImagen");
 const PlaylistVerifyOwner = require("../middlewares/authPlaylist");
@@ -22,6 +21,5 @@ router.get("/:playlistId/songs", getPlaylistSongs);
 router.get("/:playlistId", getPlaylistById);
 router.delete("/:playlistId",Auth,PlaylistVerifyOwner,deletePlaylist);
 router.delete("/:playlistId/song/:songId", Auth, PlaylistVerifyOwner, removeSongFromPlaylist);
-router.get("/playlists-por-artistas", getPlaylistsPorArtistas);
 
 module.exports = router;

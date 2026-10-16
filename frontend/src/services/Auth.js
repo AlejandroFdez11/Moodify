@@ -1,7 +1,7 @@
 import axios from "axios"
 import { jwtDecode } from "jwt-decode";
 
-const URL_API= "https://moodify-wf1j.onrender.com/";
+const URL_API= "/";
 
 export const register = async (datosUsuario) =>{
     try {

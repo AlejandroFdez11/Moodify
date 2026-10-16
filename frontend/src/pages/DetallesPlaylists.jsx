@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate,Link} from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { FaTrash, FaPlay } from "react-icons/fa";
 import Notification from "../components/Notificacion";
@@ -14,12 +14,8 @@ const DetallesPlaylist = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const playlistRes = await axios.get(
-          `https://moodify-wf1j.onrender.com/playlists/${playlistId}`
-        );
-        const songsRes = await axios.get(
-          `https://moodify-wf1j.onrender.com/playlists/${playlistId}/songs`
-        );
+        const playlistRes = await axios.get(`/playlists/${playlistId}`);
+        const songsRes = await axios.get(`/playlists/${playlistId}/songs`);
         setPlaylist(playlistRes.data);
         setSongs(songsRes.data);
       } catch (err) {
@@ -41,17 +37,17 @@ const DetallesPlaylist = () => {
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`https://moodify-wf1j.onrender.com/playlists/${playlistId}`, {
+      await axios.delete(`/playlists/${playlistId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       setNotification({
         message: "Playlist eliminada correctamente",
-        type: "success"
+        type: "success",
       });
       setTimeout(() => {
-        navigate(-1)
+        navigate(-1);
       }, 2000);
     } catch (error) {
       console.error("Error al eliminar la playlist:", error);
@@ -63,30 +59,26 @@ const DetallesPlaylist = () => {
   };
 
   const handleRemoveSong = async (songId) => {
-  try {
-    const token = localStorage.getItem("token");
-    await axios.delete(
-      `https://moodify-wf1j.onrender.com/playlists/${playlistId}/song/${songId}`,
-      {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`/playlists/${playlistId}/song/${songId}`, {
         headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    setNotification({
+      });
+      setNotification({
         message: "Canción eliminada correctamente",
-        type: "success"
+        type: "success",
       });
 
-    // Actualiza la lista sin recargar
-    setSongs((prevSongs) => prevSongs.filter((s) => s._id !== songId));
-  } catch (error) {
-    console.error("Error al eliminar la canción:", error);
-    setNotification({
-      message: "No se puede eliminar la cación de la playlists",
-      type: "error"
-    })
-  }
-};
-
+      // Actualiza la lista sin recargar
+      setSongs((prevSongs) => prevSongs.filter((s) => s._id !== songId));
+    } catch (error) {
+      console.error("Error al eliminar la canción:", error);
+      setNotification({
+        message: "No se puede eliminar la cación de la playlists",
+        type: "error",
+      });
+    }
+  };
 
   if (!playlist) return <p className="text-white p-4">Cargando...</p>;
 
@@ -144,11 +136,13 @@ const DetallesPlaylist = () => {
               </div>
               <div className="flex items-center gap-4">
                 <Link
-                  to={`/song/${song._id}`}
+                  to={`/song/${song.id || song._id}`}
                   state={{
-                    uri: song.uri,
+                    id: song.id || song._id,
                     titulo: song.titulo,
                     artista: song.artista,
+                    portada: song.portada || song.imagen,
+                    preview: song.preview, // ⚠️ puede ser undefined si la canción se guardó mal
                   }}
                   className="text-green-400 hover:text-green-300"
                   title="Reproducir"

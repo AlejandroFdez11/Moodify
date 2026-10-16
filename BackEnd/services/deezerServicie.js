@@ -24,12 +24,18 @@ async function buscarArtistas(q) {
 }
 
 async function artistasPorGenero(generos) {
-  const res = await Promise.all(generos.map(async g => {
-    const id = GENEROS[g.toLowerCase()];
-    if (!id) return [];
-    const { data } = await deezer(`/genre/${id}/artists`);
-    return data.map(artistaDTO);
-  }));
+  const res = await Promise.all(
+    generos.map(async (g) => {
+      const id = GENEROS[g.toLowerCase()];
+      if (!id) return [];
+      // ✅ Usamos el chart de canciones por género y sacamos los artistas únicos
+      const { data } = await deezer(`/chart/${id}/tracks`, { limit: 50 });
+      const artists = (data || [])
+        .map((t) => t.artist)
+        .filter((a) => a && a.id);
+      return artists.map(artistaDTO);
+    })
+  );
   return unicos(res.flat());
 }
 

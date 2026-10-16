@@ -3,51 +3,52 @@ const mongoose = require("mongoose");
 const songSchema = new mongoose.Schema({
   titulo: {
     type: String,
-    required: true
+    required: true,
   },
   artista: {
     type: String,
-    required: true
+    required: true,
   },
   album: {
     type: String,
-    default: "Ninguno"
+    default: "Ninguno",
   },
   genero: {
     type: String,
-    default: "Sin definir"
+    default: "Sin definir",
   },
   imagen: {
     type: String,
-    required: true
+    required: true,
   },
   url: {
     type: String,
-    required: true
+    required: true,
   },
   trackId: {
     type: String,
-    required: true
+    required: true,
   },
   uri: {
     type: String,
-    required: true
+    required: true,
   },
   preview_url: {
-    type: String
+    type: String,
+    default: null,
   },
   duration_ms: {
-    type: Number,  
-    required: true
+    type: Number,
+    default: 0,
   },
   release_date: {
-    type: String,  
-    required: true
+    type: String,
+    default: null,
   },
   popularity: {
-    type: Number,  
-    default: 0
-  }
+    type: Number,
+    default: 0,
+  },
 });
 
 module.exports = mongoose.model("Song", songSchema);

@@ -1,6 +1,6 @@
 import { useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import api from "../services/Api";
+import api from "../services/api";
 import ArtistCard from "../components/ArtistCard";
 import SongList from "../components/SongList";
 
@@ -8,7 +8,6 @@ const ListadoEmocion = () => {
   const { emocion } = useParams();
   const [searchParams] = useSearchParams();
 
-  // Acepta ?genres=pop,dance (nuevo) o ?genre=pop (compatibilidad)
   const genresParam =
     searchParams.get("genres") || searchParams.get("genre") || "";
 
@@ -20,16 +19,27 @@ const ListadoEmocion = () => {
   useEffect(() => {
     if (!genresParam) return;
 
+    // Reset inmediato para no ver datos de la emoción anterior
+    setArtists([]);
+    setSongs([]);
+    setError(null);
+    setLoading(true);
+
+    const controller = new AbortController();
+
     const fetchData = async () => {
-      setLoading(true);
-      setError(null);
       try {
-        // 1) Artistas por género (Deezer)
+        console.log("[ListadoEmocion] pidiendo géneros:", genresParam);
+
         const { data: artistas } = await api.get("/artistas", {
           params: { genres: genresParam },
+          signal: controller.signal,
         });
 
-        const normalized = artistas.map((a) => ({
+        // Si mientras tanto el usuario cambió de emoción, abortamos
+        if (controller.signal.aborted) return;
+
+        const normalized = (Array.isArray(artistas) ? artistas : []).map((a) => ({
           id: a.id,
           name: a.nombre,
           imagen: a.imagen,
@@ -37,28 +47,33 @@ const ListadoEmocion = () => {
         }));
         setArtists(normalized);
 
-        // 2) Top tracks de los 6 primeros artistas (paralelo + tolerante a fallos)
         const top6 = normalized.slice(0, 6);
         const results = await Promise.allSettled(
-          top6.map((a) => api.get(`/artistas/${a.id}/top`))
+          top6.map((a) =>
+            api.get(`/artistas/${a.id}/top`, { signal: controller.signal })
+          )
         );
+
+        if (controller.signal.aborted) return;
 
         const allSongs = results
           .filter((r) => r.status === "fulfilled")
           .flatMap((r) => r.value.data);
 
-        // Dedup por id de canción
         const unicos = [...new Map(allSongs.map((t) => [t.id, t])).values()];
         setSongs(unicos);
       } catch (err) {
-        console.error(err);
+        if (err.name === "CanceledError" || err.code === "ERR_CANCELED") return;
+        console.error("[ListadoEmocion]", err);
         setError("Error al cargar datos de Deezer");
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchData();
+
+    return () => controller.abort();
   }, [genresParam]);
 
   if (!genresParam) {
@@ -76,6 +91,7 @@ const ListadoEmocion = () => {
         Resultados para emoción:{" "}
         <span className="text-green-400 capitalize">{emocion}</span>
       </h1>
+      <p className="text-xs text-gray-500 mb-4">Géneros: {genresParam}</p>
 
       {loading && <p className="text-gray-400">Cargando datos de Deezer...</p>}
       {error && <p className="text-red-500">{error}</p>}

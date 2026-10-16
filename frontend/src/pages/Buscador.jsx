@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import api from "../services/Api";
+import api from "../services/api";
 import SongList from "../components/SongList";
 import ArtistCard from "../components/ArtistCard";
+import { asArray } from "../utils/normalize";
 
 const Buscador = () => {
   const [songs, setSongs] = useState([]);
@@ -13,20 +14,24 @@ const Buscador = () => {
   const query = queryParams.get("query");
 
   useEffect(() => {
+    if (!query) return;
+
     const fetchAll = async () => {
       try {
         const [songsRes, artistsRes] = await Promise.all([
           api.get("/canciones", { params: { q: query } }),
           api.get("/artistas", { params: { q: query } }),
         ]);
-        setSongs(songsRes.data);
-        setArtists(artistsRes.data);
+        setSongs(asArray(songsRes.data, "data", "songs"));
+        setArtists(asArray(artistsRes.data, "data", "artists"));
       } catch (error) {
-        console.error("Error al buscar:", error);
+        console.error("[Buscador]", error.message);
+        setSongs([]);
+        setArtists([]);
       }
     };
 
-    if (query) fetchAll();
+    fetchAll();
   }, [query]);
 
   return (

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import api from "../services/Api";
 import ArtistCard from "../components/ArtistCard";
 import PlaylistCard from "../components/PlayListCard";
 
@@ -12,66 +12,80 @@ const Home = () => {
     user: true,
     artists: true,
     playlists: true,
-    featured: true,
   });
 
-  // Cargar usuario
+  // Usuario
   useEffect(() => {
-    axios
-      .get("https://moodify-wf1j.onrender.com/users/getUser", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setLoading((l) => ({ ...l, user: false }));
+      return;
+    }
+    api
+      .get("/users/getUser", {
+        headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setUser(res.data))
       .catch(() => setUser(null))
       .finally(() => setLoading((l) => ({ ...l, user: false })));
   }, []);
 
-  // Cargar artistas populares por género (reggaeton)
+  // Artistas por género (Deezer)
   useEffect(() => {
-    axios
-      .get("https://moodify-wf1j.onrender.com/artistas?genre=reggaeton")
+    api
+      .get("/artistas", { params: { genre: "reggaeton" } })
       .then((res) => {
-        setArtists(res.data);
-        if (res.data.length > 0) {
-          const randomArtist = res.data[Math.floor(Math.random() * res.data.length)];
-          setFeaturedArtist(randomArtist);
+        const list = Array.isArray(res.data) ? res.data : [];
+        setArtists(list);
+        if (list.length > 0) {
+          setFeaturedArtist(list[Math.floor(Math.random() * list.length)]);
         }
       })
-      .catch(() => setArtists([]))
-      .finally(() => setLoading((l) => ({ ...l, artists: false, featured: false })));
+      .catch((err) => {
+        console.error("[Home] artistas:", err.message);
+        setArtists([]);
+      })
+      .finally(() => setLoading((l) => ({ ...l, artists: false })));
   }, []);
 
-  // Cargar playlists recientes
+    // Playlists
   useEffect(() => {
-    axios
-      .get("https://moodify-wf1j.onrender.com/playlists")
-      .then((res) => setPlaylists(res.data))
-      .catch(() => setPlaylists([]))
+    api
+      .get("/playlists")
+      .then((res) => {
+        const raw = res.data;
+        const list = Array.isArray(raw)
+          ? raw
+          : raw?.playlists || raw?.data || [];
+        setPlaylists(list);
+      })
+      .catch((err) => {
+        console.error("[Home] playlists:", err.message);
+        setPlaylists([]);
+      })
       .finally(() => setLoading((l) => ({ ...l, playlists: false })));
   }, []);
 
   return (
     <div className="p-8 bg-gray-900 min-h-screen font-sans">
-      {/* Saludo */}
       <header className="mb-10 max-w-4xl mx-auto text-center">
         <h1 className="text-5xl font-extrabold text-white mb-2">
           {loading.user
             ? "Cargando..."
             : user
-            ? `¡Hola, ${user.name}!`
-            : "Bienvenido a Moodify"}
+              ? `¡Hola, ${user.name}!`
+              : "Bienvenido a Moodify"}
         </h1>
         <p className="text-gray-400">
           Explora tus artistas favoritos y descubre nuevas playlists.
         </p>
       </header>
 
-      {/* Artista destacado mejorado */}
       {featuredArtist && (
         <section className="mb-16 max-w-6xl mx-auto rounded-2xl overflow-hidden shadow-xl relative">
           <img
             src={featuredArtist.imagen || "/default-artist.png"}
-            alt={featuredArtist.name || featuredArtist.nombre}
+            alt={featuredArtist.nombre || featuredArtist.name}
             className="w-full h-[450px] object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
@@ -80,16 +94,17 @@ const Home = () => {
               Artista de la Semana
             </h2>
             <h3 className="text-6xl font-extrabold mt-2 text-white drop-shadow-xl">
-              {featuredArtist.name || featuredArtist.nombre}
+              {featuredArtist.nombre || featuredArtist.name}
             </h3>
             <p className="mt-4 text-gray-300 italic max-w-3xl drop-shadow-md">
-              {featuredArtist.bio || "Un talento increíble que no te puedes perder."}
+              {featuredArtist.fans
+                ? `${featuredArtist.fans.toLocaleString()} fans en Deezer`
+                : "Un talento increíble que no te puedes perder."}
             </p>
           </div>
         </section>
       )}
 
-      {/* Artistas Populares */}
       <section className="mb-14 max-w-6xl mx-auto">
         <h2 className="text-3xl font-semibold text-white mb-6 border-b border-gray-700 pb-2">
           Artistas Populares
@@ -101,13 +116,12 @@ const Home = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {artists.map((artist) => (
-              <ArtistCard key={artist._id} artist={artist} />
+              <ArtistCard key={artist.id} artist={artist} />
             ))}
           </div>
         )}
       </section>
 
-      {/* Playlists Recientes */}
       <section className="max-w-6xl mx-auto">
         <h2 className="text-3xl font-semibold text-white mb-6 border-b border-gray-700 pb-2">
           Playlists Recientes
@@ -118,9 +132,10 @@ const Home = () => {
           <p className="text-gray-400">No hay playlists disponibles</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {playlists.map((playlist) => (
-              <PlaylistCard key={playlist._id} playlist={playlist} />
-            ))}
+            {Array.isArray(playlists) &&
+              playlists.map((playlist) => (
+                <PlaylistCard key={playlist._id} playlist={playlist} />
+              ))}
           </div>
         )}
       </section>

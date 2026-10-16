@@ -1,7 +1,8 @@
 const Playlist = require("../models/Playlist");
 const Song = require("../models/Song");
-const { getSpotifyToken } = require("../config/spotifyConfig");
 const axios = require("axios");
+
+const DEEZER_API="https://api.deezer.com";
 
 exports.createPlaylist = async (req, res) => {
   try {
@@ -81,78 +82,71 @@ exports.addSongToPlaylist = async (req, res) => {
     let { songId } = req.body;
     const playlist = req.playlist;
 
-    // Limpiar el ID si viene en formato URI
-    if (songId.startsWith('spotify:track:')) {
-      songId = songId.split(':')[2];
+    if (typeof songId === "string" && songId.includes(":")) {
+      songId = songId.split(":").pop();
     }
 
-    // Validar formato del ID
-    if (!songId || typeof songId !== 'string' || songId.length < 10) {
-      return res.status(400).json({ error: "Formato de ID inválido" });
+    if (!songId) {
+      return res.status(400).json({ error: "Falta el ID de la canción" });
     }
 
-    let song = await Song.findOne({ trackId: songId });
+    let song = await Song.findOne({ trackId: String(songId) });
 
     if (!song) {
       try {
-        const token = await getSpotifyToken();
-        
-        const response = await axios.get(`https://api.spotify.com/v1/tracks/${songId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const { data: track } = await axios.get(`${DEEZER_API}/track/${songId}`);
 
-        const track = response.data;
-
-        // Validar datos esenciales
-        if (!track.name || !track.artists) {
-          throw new Error("Datos incompletos de Spotify");
+        if (track.error || !track.title) {
+          return res.status(400).json({ error: "Canción no encontrada en Deezer" });
         }
 
         song = new Song({
-          titulo: track.name,
-          artista: track.artists.map((a) => a.name).join(", "),
-          album: track.album.name,
-          genero: track.genres?.join(", ") || "Sin definir",
-          imagen: track.album.images[0]?.url || "",
-          url: track.external_urls.spotify,
-          trackId: songId,
-          uri: `spotify:track:${songId}`,
-          preview_url: track.preview_url,
-          duration_ms: track.duration_ms,
-          release_date: track.album.release_date,
-          popularity: track.popularity,
+          titulo: track.title,
+          artista: track.artist?.name || "Desconocido",
+          album: track.album?.title || "",
+          genero: "Sin definir",
+          imagen: track.album?.cover_medium || track.album?.cover || "",
+          url: track.link || `https://www.deezer.com/track/${track.id}`,
+          trackId: String(track.id),
+          uri: `deezer:track:${track.id}`,
+          preview_url: track.preview || null,
+          duration_ms: (track.duration || 0) * 1000,
+          release_date: null,
+          popularity: track.rank || 0,
         });
 
         await song.save();
       } catch (error) {
-        console.error("Error al obtener canción de Spotify:", error.message);
-        return res.status(400).json({ 
-          error: "No se pudo obtener la canción desde Spotify",
-          details: error.message 
+        console.error("Error al obtener canción de Deezer:", error.message);
+        return res.status(400).json({
+          error: "No se pudo obtener la canción desde Deezer",
+          details: error.message,
         });
       }
     }
 
-    if (playlist.songs.includes(song._id)) {
+    const yaExiste = playlist.songs.some(
+      (id) => id.toString() === song._id.toString()
+    );
+    if (yaExiste) {
       return res.status(400).json({ error: "La canción ya está en la playlist" });
     }
 
     playlist.songs.push(song._id);
     await playlist.save();
 
-    res.json({ 
-      message: "Canción añadida correctamente", 
+    res.json({
+      message: "Canción añadida correctamente",
       playlist: {
         ...playlist._doc,
-        songs: playlist.songs.length
-      }
+        songs: playlist.songs.length,
+      },
     });
-
   } catch (error) {
     console.error("Error general:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Error interno del servidor",
-      details: error.message 
+      details: error.message,
     });
   }
 };
@@ -195,51 +189,5 @@ exports.removeSongFromPlaylist = async (req, res) => {
   } catch (error) {
     console.error("Error al eliminar canción:", error);
     res.status(500).json({ error: "Error al eliminar canción de la playlist" });
-  }
-};
-
-exports.getPlaylistsPorArtistas = async (req, res) => {
-  const { artistas } = req.query;
-
-  if (!artistas) {
-    return res.status(400).json({ error: "Lista de artistas requerida" });
-  }
-
-  try {
-    const token = await getAccessToken();
-    const artistasArray = artistas
-  .split(",")
-  .map((a) => decodeURIComponent(a.trim()))
-  .slice(0, 5);
-
-
-    const allPlaylists = [];
-
-    for (const artista of artistasArray) {
-      const response = await axios.get("https://api.spotify.com/v1/search", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: {
-          q: artista,
-          type: "playlist",
-          limit: 3,
-        },
-      });
-
-      const playlists = response.data.playlists.items.map((p) => ({
-        id: p.id,
-        nombre: p.name,
-        imagen: p.images[0]?.url || "",
-        descripcion: p.description || "",
-      }));
-
-      allPlaylists.push(...playlists);
-    }
-
-    res.json(allPlaylists);
-  } catch (err) {
-    console.error("Error al buscar playlists por artistas:", err.message);
-    res.status(500).json({ error: "Error al buscar playlists" });
   }
 };

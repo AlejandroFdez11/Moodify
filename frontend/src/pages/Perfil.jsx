@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import PlaylistCard from "../components/PlayListCard";
 import Notification from "../components/Notificacion";
+import { asArray } from "../utils/normalize";
 
 const Perfil = () => {
   const [user, setUser] = useState(null);
@@ -27,7 +28,7 @@ const Perfil = () => {
           return;
         }
         const response = await axios.get(
-          "https://moodify-wf1j.onrender.com/users/getUser",
+          "/users/getUser",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -57,14 +58,14 @@ const Perfil = () => {
       try {
         const token = localStorage.getItem("token");
         const res = await axios.get(
-          "https://moodify-wf1j.onrender.com/playlists/me",
+          "/playlists/me",
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setPlaylists(res.data);
+        setPlaylists(asArray(res.data, "playlists", "data"));
       } catch (error) {
         console.error("Error al cargar playlists:", error);
         if (error.response?.status === 401) {
@@ -103,7 +104,7 @@ const Perfil = () => {
 
       // Añadir timeout y parámetro único para evitar caché
       const response = await axios.post(
-        `https://moodify-wf1j.onrender.com/users/update-profile-image?t=${Date.now()}`,
+        `/users/update-profile-image?t=${Date.now()}`,
         formData,
         {
           headers: {
@@ -182,33 +183,25 @@ const Perfil = () => {
   }
 
   const handleSendVerificationEmail = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        "https://moodify-wf1j.onrender.com/users/send-verification-email",
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setNotification({
-        message:
-          "Correo de verificación enviado. Revisa tu bandeja de entrada.",
-        type: "success",
-      });
-      setTimeout(() => {
-        window.dispatchEvent(
-          new CustomEvent("imageUpdated", {
-            detail: response.data.imagenPerfil,
-          })
-        );
-      }, 1500);
-    } catch (error) {
-      setNotification({
-        message: "Error al enviar correo de verificación.",
-        type: "error",
-      });
-      console.error(error);
-    }
-  };
+  try {
+    const token = localStorage.getItem("token");
+    await axios.post(
+      "/users/send-verification-email",
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setNotification({
+      message: "Correo de verificación enviado. Revisa tu bandeja de entrada.",
+      type: "success",
+    });
+  } catch (error) {
+    setNotification({
+      message: "Error al enviar correo de verificación.",
+      type: "error",
+    });
+    console.error(error);
+  }
+};
 
   return (
     <div className="bg-gray-900 min-h-screen text-white p-6">
@@ -333,19 +326,13 @@ const Perfil = () => {
         )}
       </div>
 
-      {/* Sección de playlists */}
+            {/* Sección de playlists */}
       <div>
         <h2 className="text-2xl font-semibold mb-4">Tus playlists</h2>
-        {playlists.length > 0 ? (
+        {Array.isArray(playlists) && playlists.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {playlists.map((playlist) => (
-              <PlaylistCard
-                key={playlist._id}
-                playlist={playlist}
-                onDelete={() =>
-                  setPlaylists(playlists.filter((p) => p._id !== playlist._id))
-                }
-              />
+              <PlaylistCard key={playlist._id} playlist={playlist} />
             ))}
           </div>
         ) : (
